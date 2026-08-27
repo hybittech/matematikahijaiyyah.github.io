@@ -396,7 +396,7 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 | **L0** | CSGI | ✅ **OPERATIONAL** | Canonical Skeleton Graph Interface |
 | **L1** | HC Language | ✅ **OPERATIONAL** | Bahasa pemrograman codex v1.0 |
 | **L1** | HL-18E | 📐 SPECIFIED | Grammar formal 18-EBNF |
-| **L2** | H-ISA | ✅ **OPERATIONAL** | Instruction Set Architecture (30 instruksi) |
+| **L2** | H-ISA | ✅ **OPERATIONAL** | Instruction Set Architecture (44 opcode unik; 28 di RTL) |
 | **L3** | CMM-18C | 📐 SPECIFIED | Codex Multidimensional Machine |
 | **L4** | HCPU | 📝 DESIGNED | Arsitektur prosesor 18D (fotonik) |
 | **L5** | HVM | ✅ **OPERATIONAL** | Hybit Virtual Machine |
@@ -465,7 +465,7 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 
 | Pemeriksaan | Hasil | Domain |
 |---|---|---|
-| Guard checks G1–G4 | **112/112 PASS** | Bab I |
+| Guard checks G1–G4, T1–T2 | **168/168 PASS** | Bab I |
 | Guard topologis T1–T2 | **56/56 PASS** | Bab I |
 | Injectivity v₁₈ | **378/378 unique pairs** | Bab I |
 | Dekomposisi Θ̂ = U + ρ | **28/28 PASS** | Bab I |
@@ -492,8 +492,8 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 ╔═══════════════════════════════════════════════════════════════╗
 ║   HOM TEST SUITE REPORT — v1.2.0 (FINAL)                     ║
 ║                                                               ║
-║   Collected :  1,611  tests                                   ║
-║   Passed    :  1,611  ✅                                       ║
+║   Collected :  1,628  tests                                   ║
+║   Passed    :  1,628  ✅                                       ║
 ║   Skipped   :      0                                          ║
 ║   Failed    :      0                                          ║
 ║   Duration  :  ~46 seconds                                    ║
@@ -520,7 +520,7 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 | 12 | **Integrity** | 5 | ✅ PASS |
 | 13 | **Integration / E2E** | 2 | ✅ PASS |
 | 14 | **Theorems** | 1 | ✅ PASS |
-| | **TOTAL** | **1,611** | **1,611 PASS** |
+| | **TOTAL** | **1,628** | **1,628 PASS** |
 
 ---
 
@@ -716,7 +716,7 @@ hak cipta.
 ║       AUTHOR SIGNATURE                                       ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
-║  Signed:     Firman Arief Hidayatullah                       ║
+║  Signed:     Maulana Amratulloh                       ║
 ║              Perancang & Perumus Matematika Hijaiyyah        ║
 ║  Release:    HM-28-v1.2-HC18D                                ║
 ║  Seal:       VERIFIED & SEALED                               ║

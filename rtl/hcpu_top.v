@@ -72,6 +72,10 @@ module hcpu_top #(
     wire [`XLEN-1:0]   fwd_gpr_s1, fwd_gpr_s2;
     wire [`HREG_W-1:0] fwd_hreg_s1, fwd_hreg_s2;
 
+    // HISAB serializer outputs
+    wire [`XLEN-1:0] hisab_pack0, hisab_pack1, hisab_pack2, hisab_crc;
+    wire [7:0]       hisab_guard_status;
+
     // Execute → Memory
     wire [7:0]  ex_opcode;
     wire [3:0]  ex_dst;
@@ -500,10 +504,6 @@ module hcpu_top #(
     );
 
     // ── HISAB Serializer ─────────────────────────────────────────
-    wire [`XLEN-1:0] hisab_pack0, hisab_pack1, hisab_pack2;
-    wire [`XLEN-1:0] hisab_crc;
-    wire [7:0]       hisab_guard_status;
-
     hcpu_hisab u_hisab (
         .op          (2'd0),             // Always HPACK mode (CRC is computed alongside)
         .vec_in      (fwd_hreg_s1),      // Forwarded H-Reg S1

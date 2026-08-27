@@ -131,26 +131,41 @@ Cost: $5K–$20K depending on area and process node.
 
 ---
 
-## Die Area Estimates
+## Synthesis Results (measured)
 
-### SKY130 (130nm)
-
-| Block | Estimated Gates | Area (μm²) |
+| Module | Cells (measured) | Flip-flops |
 |---|---|---|
-| Pipeline registers | ~2,000 | ~8,000 |
-| GPR (18×32-bit) | ~3,000 | ~12,000 |
-| H-Reg (16×144-bit) | ~12,000 | ~48,000 |
-| Codex ALU | ~4,000 | ~16,000 |
-| Guard checker | ~500 | ~2,000 |
-| ROM (28×144-bit) | ~2,000 | ~8,000 |
-| UART TX | ~200 | ~800 |
-| Stack (256×32-bit) | ~4,000 | ~16,000 |
-| Controller + misc | ~500 | ~2,000 |
-| **Total** | **~28,200** | **~113,000** |
+| `hcpu_dataram` (4096×32) | 416,165 | 131,072 |
+| `hcpu_memory` (256×32 stack) | 25,480 | 8,392 |
+| `hcpu_regfile` (18 GPR + 16 H-Reg) | 16,486 | 2,920 |
+| `hcpu_codex_alu` | 12,135 | 0 |
+| `hcpu_mul` | 2,964 | 0 |
+| `hcpu_execute` | 2,687 | 249 |
+| `hcpu_hisab` | 1,263 | 0 |
+| `hcpu_decode` | 1,061 | 427 |
+| `hcpu_forward` | 740 | 0 |
+| `hcpu_top` | 700 | 95 |
+| `hcpu_guard` | 609 | 0 |
+| `hcpu_fetch` | 294 | 129 |
+| `hcpu_rom` (28×144) | 109 | 0 |
+| `hcpu_uart_tx` | 89 | 23 |
+| `hcpu_controller` | 13 | 2 |
+| **Total** | **480,795** | **143,309** |
 
-**Estimated die size: ~0.35 mm × 0.35 mm ≈ 0.12 mm²**
+Generic-gate counts from Yosys 0.68 (`rtl/mpw/synth_hcpu.ys`); full report in
+`rtl/mpw/hcpu_synth_report.txt`. **No PDK was installed for this run**, so these
+are not mapped standard cells and no um2 area or timing can be derived from them.
 
-This is well within Efabless Open MPW's user project area (~10 mm²).
+**`hcpu_dataram` is 87% of the design.** 4096 words x 32 bits infers 131,072
+flip-flops because the RTL describes a register array, not a memory macro.
+Excluding it, the design is 64,630 cells.
+
+Before any tape-out attempt the data RAM must become an SRAM macro (e.g. OpenRAM
+on SKY130) or shrink — 131,072 flip-flops will not fit the 700x700 um user area
+in `config.json`. The same applies to the 256x32 stack in `hcpu_memory`.
+
+Critical path: 84 logic levels through the divide/modulo-by-10 at
+`hcpu_top.v:193-194` (decimal conversion in the PRINT FSM).
 
 ---
 

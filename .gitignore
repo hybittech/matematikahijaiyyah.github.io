@@ -25,6 +25,7 @@ htmlcov/
 # Environment
 .env
 .venv/
+.venv-mac/
 venv/
 
 # OS
@@ -36,3 +37,16 @@ Thumbs.db
 
 # Project-specific
 *.rom.bak
+
+# Yosys synthesis artifacts (large; regenerate with: cd rtl/mpw && yosys -s synth_hcpu.ys)
+rtl/mpw/hcpu_synth.json
+rtl/mpw/hcpu_synth_netlist.v
+
+# Simulation artifacts (regenerate with: iverilog -g2012 -I rtl -o out.vvp rtl/tb/<tb>.v rtl/*.v)
+*.vcd
+*.vvp
+
+# Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.
+# Repo ini publik (GitHub Pages di hybit.tech), jadi isi folder ini sengaja
+# ditahan di lokal. Cadangkan sendiri; git tidak menyimpannya.
+Matematika Hijaiyyah/

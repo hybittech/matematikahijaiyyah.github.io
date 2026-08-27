@@ -37,8 +37,8 @@ from ..widgets import OutputWriter, make_text
 RELEASE_ID = "HM-28-v1.0-HC18D-B84D025"
 RELEASE_VERSION = "1.0.0"
 RELEASE_DATE = "2026"
-AUTHOR_NAME = "Firman Arief Hidayatullah"
-AUTHOR_KEY_ID = "FAH-SIG"
+AUTHOR_NAME = "Maulana Amratulloh"
+AUTHOR_KEY_ID = "MA-SIG"
 COPYRIGHT = f"© {RELEASE_DATE} Hijaiyyah Mathematics Computational Laboratory (HMCL)"
 LICENSE_TYPE = "Proprietary — All Rights Reserved"
 

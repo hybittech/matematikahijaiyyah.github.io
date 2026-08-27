@@ -56,28 +56,31 @@ module hcpu_guard #(
 
     // ── G1: A_N = Na + Nb + Nd ──────────────────────────────────
     wire [9:0] sum_n = na + nb + nd;
-    wire g1_comb = (a_n == sum_n[7:0]) && (sum_n[9:8] == 2'b00 || a_n == sum_n[7:0]);
+    // Compare the full 10-bit sum so a carry out of bit 7 cannot alias to a pass.
+    wire g1_comb = ({2'b00, a_n} == sum_n);
 
     // ── G2: A_K = Kp + Kx + Ks + Ka + Kc ───────────────────────
     wire [10:0] sum_k = kp + kx + ks + ka + kc;
-    wire g2_comb = (a_k == sum_k[7:0]);
+    wire g2_comb = ({3'b000, a_k} == sum_k);
 
     // ── G3: A_Q = Qp + Qx + Qs + Qa + Qc ───────────────────────
     wire [10:0] sum_q = qp + qx + qs + qa + qc;
-    wire g3_comb = (a_q == sum_q[7:0]);
+    wire g3_comb = ({3'b000, a_q} == sum_q);
 
     // ── G4: ρ = Θ̂ − U ≥ 0 ──────────────────────────────────────
     // U = Qx + Qs + Qa + 4 × Qc
     wire [10:0] u_val = qx + qs + qa + ({qc, 2'b00});  // qc << 2 = 4*qc
-    // ρ = Θ̂ − U (signed: need to check if theta >= U)
-    wire g4_comb = (theta >= u_val[7:0]);
+    // ρ = Θ̂ − U ≥ 0 ⇔ Θ̂ ≥ U, compared at full width so a wide U cannot alias.
+    wire g4_comb = ({3'b000, theta} >= u_val);
 
     // ── T1: Ks > 0 ⇒ Qc ≥ 1 ────────────────────────────────────
     wire t1_comb = (ks == 8'd0) || (qc >= 8'd1);
 
-    // ── T2: Kc > 0 ⇒ Qc ≥ 1 (Kaf is an exception) ──────────────
-    wire is_kaf = (theta == 8'd2 && a_k == 8'd1 && a_q == 8'd0 && kc == 8'd1);
-    wire t2_comb = (kc == 8'd0) || (qc >= 8'd1) || is_kaf;
+    // ── T2: Kc > 0 ⇒ Qc ≥ 1 ────────────────────────────────────
+    // No exceptions: Kaf carries Ka=1, Kc=0 in the canonical Master Table,
+    // so T2 is vacuously satisfied. (A prior is_kaf override existed only to
+    // mask a corrupted ROM entry and was removed once the data was corrected.)
+    wire t2_comb = (kc == 8'd0) || (qc >= 8'd1);
 
     // ── Combined combinational result ───────────────────────────
     wire guard_pass_comb = g1_comb & g2_comb & g3_comb & g4_comb

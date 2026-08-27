@@ -5,8 +5,8 @@ export function buildExomatrix(v18) {
   const Na = v18[1], Nb = v18[2], Nd = v18[3];
   const Kp = v18[4], Kx = v18[5], Ks = v18[6], Ka = v18[7], Kc = v18[8];
   const Qp = v18[9], Qx2 = v18[10], Qs = v18[11], Qa = v18[12], Qc = v18[13];
-  const Hstar = v18[14];
-  const AN = v18[15], AK = v18[16], AQ = v18[17];
+  const AN = v18[14], AK = v18[15], AQ = v18[16];
+  const Hstar = v18[17];
 
   const U = Qx2 + Qs + Qa + 4 * Qc;
   const rho = theta - U;
@@ -35,7 +35,7 @@ export function auditR1R5(v18) {
   const Na = v18[1], Nb = v18[2], Nd = v18[3];
   const Kp = v18[4], Kx = v18[5], Ks = v18[6], Ka = v18[7], Kc = v18[8];
   const Qp = v18[9], Qx2 = v18[10], Qs = v18[11], Qa = v18[12], Qc = v18[13];
-  const AN = v18[15], AK = v18[16], AQ = v18[17];
+  const AN = v18[14], AK = v18[15], AQ = v18[16];
 
   const U = Qx2 + Qs + Qa + 4 * Qc;
   const rho = theta - U;

@@ -18,7 +18,7 @@
 [![Release](https://img.shields.io/badge/Release-HM--28--v1.2--HC18D-blue)]()
 [![Python](https://img.shields.io/badge/Python-3.11+-green)]()
 [![License](https://img.shields.io/badge/License-Proprietary-red)]()
-[![Tests](https://img.shields.io/badge/Tests-1611%2F1611%20PASS-brightgreen)]()
+[![Tests](https://img.shields.io/badge/Tests-1628%2F1628%20PASS-brightgreen)]()
 [![Dataset](https://img.shields.io/badge/Dataset-28×18%20SEALED-orange)]()
 [![Pipeline](https://img.shields.io/badge/Pipeline-.hc→.hbc→HVM-purple)]()
 [![Paradigm](https://img.shields.io/badge/Paradigm-bit⊕qubit⊕hybit-gold)]()
@@ -172,7 +172,7 @@ Test suite komprehensif yang mencakup **seluruh 1.380 pemeriksaan** dari Bab I�
 
 ```bash
 $ python -m pytest tests/test_full_verification.py -v
-============================ 1380 passed in 9.23s =============================
+============================ 1380 passed in 0.47s =============================
 ```
 
 ### 📄 Dokumentasi Baru & Diperbarui
@@ -192,7 +192,7 @@ $ python -m pytest tests/test_full_verification.py -v
 
 | Perubahan | Detail |
 |---|---|
-| **Test badge** | `88+` → `1611/1611 PASS` |
+| **Test badge** | `88+` → `1628/1628 PASS` |
 | **Release badge** | `HM-28-v1.0` → `HM-28-v1.2` |
 | **GUI `theorems.py`** | Referensi teorema diperbarui ke §2.x (Bab II) + konteks 1.380-check |
 | **GUI `audit.py`** | Welcome screen menampilkan ringkasan framework verifikasi |
@@ -705,7 +705,7 @@ HOM/
 | **L0** | CSGI | ✅ **OPERATIONAL** | Canonical Skeleton Graph Interface |
 | **L1** | HC Language | ✅ **OPERATIONAL** | Bahasa pemrograman codex v1.0 |
 | **L1** | HL-18E | 📐 SPECIFIED | Grammar formal 18-EBNF |
-| **L2** | H-ISA | ✅ **OPERATIONAL** | Instruction Set Architecture (30 instruksi) |
+| **L2** | H-ISA | ✅ **OPERATIONAL** | Instruction Set Architecture (44 opcode unik; 28 di RTL) |
 | **L3** | CMM-18C | 📐 SPECIFIED | Codex Multidimensional Machine |
 | **L4** | HCPU | 📝 DESIGNED | Arsitektur prosesor 18D (fotonik) |
 | **L5** | HVM | ✅ **OPERATIONAL** | Hybit Virtual Machine |
@@ -828,8 +828,8 @@ Rilis ini telah melewati verifikasi formal berikut:
 ║   Commit  : 8fa0c12                                           ║
 ║                                                               ║
 ║   ┌─────────────────────────────────────────────────────┐     ║
-║   │  Collected :  1,611  tests                          │     ║
-║   │  Passed    :  1,611  ✅                              │     ║
+║   │  Collected :  1,628  tests                          │     ║
+║   │  Passed    :  1,628  ✅                              │     ║
 ║   │  Skipped   :      0                                 │     ║
 ║   │  Failed    :      0                                 │     ║
 ║   │  Duration  :  ~46 seconds                           │     ║
@@ -842,7 +842,7 @@ Rilis ini telah melewati verifikasi formal berikut:
 
 ```bash
 $ python -m pytest tests/
-========================= 1611 passed in 46.00s =========================
+========================== 1628 passed in 0.69s ==========================
 ```
 
 ---
@@ -867,7 +867,7 @@ Dengan migrasi ini, pipeline dapat sepenuhnya memproses local glyphs, dan keempa
 
 ---
 
-### Ringkasan per Modul — 14 Modul
+### Ringkasan per Modul — 15 Modul
 
 | # | Modul | Tests | Status |
 |---|---|---|---|
@@ -882,14 +882,15 @@ Dengan migrasi ini, pipeline dapat sepenuhnya memproses local glyphs, dan keempa
 | 9 | **Algebra — Metrik-Vektorial** (`test_algebra/`) | 15 | ✅ PASS |
 | 10 | **HAR Registry** (`test_har/`) | 15 | ✅ PASS |
 | 11 | **Pipeline / Ψ-Compiler** (`test_pipeline/`) | 13 | ✅ PASS |
-| 12 | **Integrity** (`test_integrity/`) | 5 | ✅ PASS |
+| 12 | **Integrity** (`test_integrity/`) | 17 | ✅ PASS |
 | 13 | **Integration / E2E** (`test_integration/`) | 2 | ✅ PASS |
 | 14 | **Theorems** (`test_theorems/`) | 1 | ✅ PASS |
-| | **TOTAL** | **1,611** | **1,611 PASS** |
+| 15 | **AI Runtime** (`test_ai/`) | 5 | ✅ PASS |
+| | **TOTAL** | **1,628** | **1,628 PASS** |
 
 ---
 
-### Rincian per File — 31 File Tes
+### Rincian per File — 35 File Tes
 
 #### 1. 🔬 Verification Framework (1,380 tests)
 
@@ -1009,8 +1010,8 @@ Dengan migrasi ini, pipeline dapat sepenuhnya memproses local glyphs, dan keempa
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    1,611 TOTAL TESTS                         │
-│                    1,611 PASSED                               │
+│                    1,628 TOTAL TESTS                         │
+│                    1,628 PASSED                               │
 │                        0 SKIPPED                              │
 │                        0 FAILED                               │
 │                                                             │
@@ -1046,22 +1047,23 @@ Dengan migrasi ini, pipeline dapat sepenuhnya memproses local glyphs, dan keempa
 ### Distribusi Tes
 
 ```
-Verification Framework  ██████████████████████████████████████████ 1,380 (85.7%)
-Hybit Core              ███▎                                         52 ( 3.2%)
-Virtual Machine         ██▏                                          34 ( 2.1%)
+Verification Framework  ██████████████████████████████████████████ 1,380 (84.8%)
+Hybit Core              ███▏                                         52 ( 3.2%)
+Virtual Machine         ██                                           34 ( 2.1%)
 Language                █▋                                           27 ( 1.7%)
 HISA Machine            █▏                                           18 ( 1.1%)
-HISAB                   █                                            17 ( 1.1%)
+HISAB                   █                                            17 ( 1.0%)
+Integrity               █                                            17 ( 1.0%)
 Compiler (HCC)          █                                            16 ( 1.0%)
 Assembler (HASM)        █                                            16 ( 1.0%)
 Algebra (MV)            ▉                                            15 ( 0.9%)
 HAR Registry            ▉                                            15 ( 0.9%)
 Pipeline (Ψ)            ▊                                            13 ( 0.8%)
-Integrity               ▍                                             5 ( 0.3%)
+AI Runtime              ▍                                             5 ( 0.3%)
 Integration             ▏                                             2 ( 0.1%)
 Theorems                ▏                                             1 ( 0.1%)
 ────────────────────────────────────────────────────────────────────
-TOTAL                                                            1,611 (100%)
+TOTAL                                                            1,628 (100%)
 ```
 
 ---
@@ -1098,8 +1100,8 @@ TOTAL                                                            1,611 (100%)
 ║                                                                   ║
 ║       ┌───────────────────────────────────────────────┐           ║
 ║       │                                               │           ║
-║       │   Collected :  1,611                          │           ║
-║       │   Passed    :  1,611                          │           ║
+║       │   Collected :  1,628                          │           ║
+║       │   Passed    :  1,628                          │           ║
 ║       │   Skipped   :      0                          │           ║
 ║       │   Failed    :      0                          │           ║
 ║       │   Duration  :    ~46 seconds                  │           ║
@@ -1123,9 +1125,9 @@ TOTAL                                                            1,611 (100%)
 
 ```
 $ python -m pytest tests/
-========================= 1611 passed in 46.00s =========================
+========================== 1628 passed in 0.69s ==========================
 
-1,611 passed  ·  0 skipped  ·  0 failed
+1,628 passed  ·  0 skipped  ·  0 failed
 
 Matematika Hijaiyyah — HOM v1.2.0
 Sistem Operasi Metrik-Vektorial: VTM · NMV · AGM · ITM · EXM
@@ -1283,7 +1285,7 @@ fail:
 |---|---|---|---|
 | Arsitektur sistem | [`docs/architecture.md`](docs/architecture.md) | Layer, prinsip, dependency — terminologi MV | `UPDATED` |
 | Spesifikasi HC Language | [`docs/hc_language.md`](docs/hc_language.md) | Grammar, tipe, semantik | Existing |
-| Spesifikasi H-ISA | [`docs/hisa_spec.md`](docs/hisa_spec.md) | 30 instruksi — pemetaan ke operasi MV | `UPDATED` |
+| Spesifikasi H-ISA | [`docs/hisa_spec.md`](docs/hisa_spec.md) | 44 opcode unik — pemetaan ke operasi MV | `UPDATED` |
 | Spesifikasi CSGI | [`docs/csgi_spec.md`](docs/csgi_spec.md) | Skeleton extraction protocol | Existing |
 | Spesifikasi HVM | [`docs/hcvm_spec.md`](docs/hcvm_spec.md) | Virtual machine — referensi operasi MV | `UPDATED` |
 | Spesifikasi Pipeline | [`docs/hybit_pipeline_spec.md`](docs/hybit_pipeline_spec.md) | Pipeline lengkap, non-overlap principle | Existing |
@@ -1325,7 +1327,7 @@ fail:
 ║  ── Hybit Pipeline ──────────────────────────────────────── ║
 ║  Source:     .hc (UTF-8 NFC, HC Language v1.0)               ║
 ║  Compiler:   HCC (6-stage)                                   ║
-║  Assembly:   .hasm (H-ISA, 30 instructions)                  ║
+║  Assembly:   .hasm (H-ISA, 44 opcodes)                       ║
 ║  Bytecode:   .hbc (binary, magic "HBYT", 32B header)         ║
 ║  Geometry:   .hgeo (JSON, provenance chain)                  ║
 ║  Registry:   HAR-001 (Hijaiyyah, 28×18, CERTIFIED)           ║
@@ -1383,7 +1385,7 @@ tertulis dari pemegang hak cipta.
 ║       AUTHOR SIGNATURE                                       ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
-║  Signed:     Firman Arief Hidayatullah                       ║
+║  Signed:     Maulana Amratulloh                       ║
 ║              Perancang & Perumus Matematika Hijaiyyah        ║
 ║  Release:    HM-28-v1.2-HC18D                                ║
 ║  Seal:       VERIFIED & SEALED                               ║

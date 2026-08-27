@@ -1,4 +1,4 @@
-"""Field 3: Hijaiyyah Integral Vector Calculus (Bab II-C, Ch 25-28)."""
+"""Field 3: Hijaiyyah Aggregametric (Bab II-C, Ch 25-28)."""
 
 from __future__ import annotations
 

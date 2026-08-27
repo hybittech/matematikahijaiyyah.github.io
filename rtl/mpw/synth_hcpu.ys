@@ -14,23 +14,24 @@
 #
 
 # ── Read RTL sources ─────────────────────────────────────────────
-verilog_defaults -add -I../../
-read_verilog -sv ../../hcpu_pkg.vh
-read_verilog ../../hcpu_top.v
-read_verilog ../../hcpu_fetch.v
-read_verilog ../../hcpu_decode.v
-read_verilog ../../hcpu_execute.v
-read_verilog ../../hcpu_mul.v
-read_verilog ../../hcpu_memory.v
-read_verilog ../../hcpu_writeback.v
-read_verilog ../../hcpu_regfile.v
-read_verilog ../../hcpu_forward.v
-read_verilog ../../hcpu_controller.v
-read_verilog ../../hcpu_rom.v
-read_verilog ../../hcpu_guard.v
-read_verilog ../../hcpu_codex_alu.v
-read_verilog ../../hcpu_dataram.v
-read_verilog ../../hcpu_uart_tx.v
+verilog_defaults -add -I..
+read_verilog -sv ../hcpu_pkg.vh
+read_verilog ../hcpu_top.v
+read_verilog ../hcpu_fetch.v
+read_verilog ../hcpu_decode.v
+read_verilog ../hcpu_execute.v
+read_verilog ../hcpu_mul.v
+read_verilog ../hcpu_memory.v
+read_verilog ../hcpu_writeback.v
+read_verilog ../hcpu_regfile.v
+read_verilog ../hcpu_forward.v
+read_verilog ../hcpu_controller.v
+read_verilog ../hcpu_rom.v
+read_verilog ../hcpu_guard.v
+read_verilog ../hcpu_codex_alu.v
+read_verilog ../hcpu_dataram.v
+read_verilog ../hcpu_uart_tx.v
+read_verilog ../hcpu_hisab.v
 
 # ── Elaborate top module ─────────────────────────────────────────
 hierarchy -top hcpu_top -chparam USE_DSP 0

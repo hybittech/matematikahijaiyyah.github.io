@@ -1,11 +1,11 @@
 """
-Hijaiyyah Mathematics — HM-28-v1.0-HC18D
+Hijaiyyah Mathematics — Master Table HM-28-v.1.0-HC18D
 Formal Computational Framework for Hijaiyyah Letterform Geometry
 
-Author:  Firman Arief Hidayatullah
+Author:  Maulana Amratulloh
 License: (c) 2026 HMCL
 """
 
-__version__ = "1.0.0"
-__release__ = "HM-28-v1.0-HC18D"
-__author__ = "Firman Arief Hidayatullah"
+from .version import __version__, __release__, __dataset_release__  # noqa: F401
+
+__author__ = "Maulana Amratulloh"

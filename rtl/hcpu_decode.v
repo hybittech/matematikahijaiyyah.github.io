@@ -132,7 +132,34 @@ module hcpu_decode (
 
     // ── Pipeline register + control decode ──────────────────────
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n || flush) begin
+        // Async reset and synchronous flush clear the same registers, but
+        // they must stay in separate branches: `flush` is not in the
+        // sensitivity list, so folding it into the async-reset condition
+        // makes the block un-inferrable (yosys: "Multiple edge sensitive
+        // events found for this signal").
+        if (!rst_n) begin
+            id_opcode    <= `OP_NOP;
+            id_dst       <= 4'd0;
+            id_s1        <= 4'd0;
+            id_s2        <= 4'd0;
+            id_imm       <= 12'd0;
+            id_gpr_s1    <= {`XLEN{1'b0}};
+            id_gpr_s2    <= {`XLEN{1'b0}};
+            id_hreg_s1   <= {`HREG_W{1'b0}};
+            id_hreg_s2   <= {`HREG_W{1'b0}};
+            id_pc        <= {`XLEN{1'b0}};
+            id_gpr_we    <= 1'b0;
+            id_hreg_we   <= 1'b0;
+            id_mem_read  <= 1'b0;
+            id_mem_write <= 1'b0;
+            id_is_branch <= 1'b0;
+            id_is_jump   <= 1'b0;
+            id_is_codex  <= 1'b0;
+            id_is_halt   <= 1'b0;
+            id_is_print  <= 1'b0;
+            id_is_push   <= 1'b0;
+            id_is_pop    <= 1'b0;
+        end else if (flush) begin
             id_opcode    <= `OP_NOP;
             id_dst       <= 4'd0;
             id_s1        <= 4'd0;

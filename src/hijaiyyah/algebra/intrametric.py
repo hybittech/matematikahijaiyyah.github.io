@@ -1,4 +1,4 @@
-"""Field 4: Hijaiyyah Codex Geometry (Bab II-D, Ch 29-31)."""
+"""Field 4: Hijaiyyah Intrametric (Bab II-D, Ch 29-31)."""
 
 from __future__ import annotations
 
@@ -7,20 +7,7 @@ from typing import Any, Dict, List, Tuple
 
 from ..core.codex_entry import CodexEntry
 from ..core.master_table import MASTER_TABLE
-
-
-def _v(h: Any) -> List[int]:
-    """Extract v18 vector from CodexEntry or list."""
-    if isinstance(h, CodexEntry):
-        return list(h.vector)
-    if isinstance(h, (list, tuple)):
-        return list(h)
-    raise TypeError(f"Expected vector-like, got {type(h).__name__}")
-
-
-def _n2(v: List[int]) -> int:
-    """‖v₁₄‖²"""
-    return sum(v[k] * v[k] for k in range(14))
+from ._common import _v, _n2
 
 
 def _ip(a: List[int], b: List[int]) -> int:

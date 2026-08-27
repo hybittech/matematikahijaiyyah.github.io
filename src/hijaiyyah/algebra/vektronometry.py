@@ -1,4 +1,4 @@
-"""Field 1: Hijaiyyah Vectronometry (Bab II-A, Ch 17-21)."""
+"""Field 1: Hijaiyyah Vektronometry (Bab II-A, Ch 17-21)."""
 
 from __future__ import annotations
 import math
@@ -8,12 +8,7 @@ from ..core.guards import compute_U
 from ..core.master_table import MASTER_TABLE
 
 
-def _v(h: Any) -> List[int]:
-    return list(h.vector) if isinstance(h, CodexEntry) else list(h)
-
-
-def _n2(v: List[int]) -> int:
-    return sum(v[k] * v[k] for k in range(14))
+from ._common import _v, _n2
 
 
 def _ip(a: List[int], b: List[int]) -> int:

@@ -193,7 +193,31 @@ module hcpu_execute #(
 
     // ── Pipeline register to Memory/Writeback ───────────────────
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n || flush) begin
+        // Async reset and synchronous flush clear the same registers, but
+        // they must stay in separate branches: `flush` is not in the
+        // sensitivity list, so folding it into the async-reset condition
+        // makes the block un-inferrable (yosys: "Multiple edge sensitive
+        // events found for this signal").
+        if (!rst_n) begin
+            ex_opcode      <= `OP_NOP;
+            ex_dst         <= 4'd0;
+            ex_gpr_result  <= {`XLEN{1'b0}};
+            ex_hreg_result <= {`HREG_W{1'b0}};
+            ex_gpr_we      <= 1'b0;
+            ex_hreg_we     <= 1'b0;
+            ex_flags_new   <= 8'h00;
+            ex_flags_we    <= 1'b0;
+            ex_is_halt     <= 1'b0;
+            ex_is_print    <= 1'b0;
+            ex_print_data  <= {`XLEN{1'b0}};
+            ex_is_push     <= 1'b0;
+            ex_is_pop      <= 1'b0;
+            ex_push_data   <= {`XLEN{1'b0}};
+            ex_mem_read    <= 1'b0;
+            ex_mem_write   <= 1'b0;
+            ex_mem_addr    <= {`DATA_ADDR_W{1'b0}};
+            ex_mem_wdata   <= {`XLEN{1'b0}};
+        end else if (flush) begin
             ex_opcode      <= `OP_NOP;
             ex_dst         <= 4'd0;
             ex_gpr_result  <= {`XLEN{1'b0}};

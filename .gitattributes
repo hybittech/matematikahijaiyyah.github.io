@@ -1,0 +1,49 @@
+# Protect binary assets from any text conversion.
+#
+# The book PDF in "Matematika Hijaiyyah/" was destroyed by exactly this: its
+# bytes were read as text and rewritten as UTF-8, so every invalid sequence
+# became U+FFFD. 7,025,879 replacements later, 52.9% of the file was padding
+# and all 182 pages stopped decoding. The damage is not reversible.
+#
+# `binary` is shorthand for `-text -diff`, which stops line-ending conversion
+# and keeps these files out of textual diffs.
+
+*.pdf      binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.webp     binary
+*.ttf      binary
+*.otf      binary
+*.woff     binary
+*.woff2    binary
+*.eot      binary
+*.zip      binary
+*.gz       binary
+*.tar      binary
+*.bin      binary
+*.rom      binary
+*.vvp      binary
+*.vcd      binary
+*.hb       binary
+*.hyp      binary
+*.eq       binary
+*.lattice  binary
+
+# Normalise line endings for text so a checkout on another platform does not
+# rewrite every file and bury real changes in whitespace noise.
+*.py       text eol=lf
+*.js       text eol=lf
+*.jsx      text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.csv      text eol=lf
+*.v        text eol=lf
+*.vh       text eol=lf
+*.ys       text eol=lf
+*.hc       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.toml     text eol=lf

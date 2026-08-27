@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function LetterCard({ entry }) {
   const theta = entry.v18[0];
-  const AN = entry.v18[15], AK = entry.v18[16], AQ = entry.v18[17];
+  const AN = entry.v18[14], AK = entry.v18[15], AQ = entry.v18[16];
 
   return (
     <Link

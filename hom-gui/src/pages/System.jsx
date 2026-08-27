@@ -207,7 +207,7 @@ export default function System() {
       {/* ═══════════ INSTRUKSI H-ISA ═══════════ */}
       <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
         style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="30 instruksi terdefinisi · 18 tests">INSTRUKSI H-ISA</SectionTitle>
+        <SectionTitle sub="44 opcode unik · 28 di RTL · 18 tests">INSTRUKSI H-ISA</SectionTitle>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[
@@ -243,7 +243,7 @@ export default function System() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { name: 'Guard System', sub: 'G1–G4, T1–T2 · 25 ops O(1)', tests: '112/112', status: 'OP' },
+            { name: 'Guard System', sub: 'G1–G4, T1–T2 · 25 ops O(1)', tests: '168/168', status: 'OP' },
             { name: 'HCHECK', sub: 'Periodik full-scan runtime', tests: '7', status: 'OP' },
             { name: 'HISAB Protocol', sub: 'Pertukaran codex · 3-level validation', tests: '17', status: 'OP' },
             { name: 'SHA-256 Seal', sub: 'Integritas dataset · immutable', tests: '3', status: 'OP' },
@@ -341,7 +341,7 @@ export default function System() {
                   Target Integrasi MPW & FPGA
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-hom-muted">Status Validasi</span><span className="text-hom-green font-mono font-bold">174/174 PASS (Zero Bug)</span></div>
+                  <div className="flex justify-between"><span className="text-hom-muted">Status Validasi</span><span className="text-hom-green font-mono font-bold">204/204 PASS (Zero Bug)</span></div>
                   <div className="flex justify-between"><span className="text-hom-muted">Chip Fabrikasi</span><span className="text-hom-accent font-mono">SkyWater SKY130 (Caravel)</span></div>
                   <div className="flex justify-between"><span className="text-hom-muted">Protokol Akses</span><span className="text-hom-text/80 font-mono">Wishbone B4 Slave (8-register maps)</span></div>
                   <div className="flex justify-between"><span className="text-hom-muted">Target FPGA</span><span className="text-hom-gold font-mono">Xilinx Arty A7-35T (100MHz)</span></div>
