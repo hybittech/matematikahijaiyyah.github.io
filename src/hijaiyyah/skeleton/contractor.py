@@ -6,7 +6,7 @@ from typing import Dict, List, Set, Tuple
 
 import numpy as np
 
-from .csgi import CSGIGraph, CSGINode, CSGIEdge
+from .csgi import CSGIEdge, CSGIGraph, CSGINode
 
 
 class SkeletonContractor:

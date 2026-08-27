@@ -13,8 +13,8 @@ Pipeline:
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -108,9 +108,7 @@ class Measurement:
     @property
     def v18(self) -> List[int]:
         return (
-            [self.theta_hat]
-            + self.N + self.K + self.Q
-            + [self.A_N, self.A_K, self.A_Q, self.H_star]
+            [self.theta_hat, *self.N, *self.K, *self.Q, self.A_N, self.A_K, self.A_Q, self.H_star]
         )
 
 
@@ -286,13 +284,13 @@ class PsiCompiler:
 
 
 __all__ = [
-    "PsiCompiler",
-    "HGeoFile",
-    "Measurement",
     "CanonicalLock",
-    "ExtractionParams",
-    "SkeletonNode",
-    "SkeletonEdge",
     "DotInfo",
+    "ExtractionParams",
+    "HGeoFile",
     "MainPathInfo",
+    "Measurement",
+    "PsiCompiler",
+    "SkeletonEdge",
+    "SkeletonNode",
 ]

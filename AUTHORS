@@ -1,0 +1,54 @@
+================================================================================
+MATEMATIKA HIJAIYYAH — AUTHORSHIP RECORD
+Hijaiyyah Mathematics Computational Laboratory (HMCL)
+================================================================================
+
+PRINCIPAL
+
+  Maulana Amratulloh
+  Inventor & Chief Architect
+
+  Sole originator of the formal system, its mathematical foundations, and the
+  computational architecture derived from them. This designation covers the
+  work in its entirety:
+
+    · Matematika Hijaiyyah — the formal system and its axiomatic foundations
+    · Master Table HM-28 — the sealed 28 x 18 canonical dataset
+    · Codex 14D / 18D — the integer vector representation
+    · Guard System G1-G4, T1-T2 — intrinsic O(1) validation
+    · Metrik-Vektorial Hijaiyyah — VTM, NMV, AGM, ITM, EXM
+    · Hybit — the constrained commutative monoid and its paradigm
+    · H-ISA, HVM, HC language, HCC, HASM, HISAB, HAR
+    · HCPU — the silicon architecture and its RTL realization
+
+INSTITUTION
+
+  Hijaiyyah Mathematics Computational Laboratory (HMCL)
+  Copyright holder. All rights reserved.
+
+--------------------------------------------------------------------------------
+CANONICAL FORM
+
+  The name of record is written exactly as:
+
+      Maulana Amratulloh
+
+  This spelling is authoritative for every legal instrument in this repository:
+  LICENSE, patent release declarations, certificates, and release manifests.
+  No variant spelling, abbreviation, or transliteration is authorized.
+
+  Role of record:  Inventor & Chief Architect
+  Institution:     Hijaiyyah Mathematics Computational Laboratory (HMCL)
+
+--------------------------------------------------------------------------------
+CONSISTENCY
+
+  Authorship attribution is enforced programmatically by
+
+      tests/test_integrity/test_authorship.py
+
+  which fails the build if any source, document, certificate, or manifest
+  departs from the canonical form above.
+
+================================================================================
+(c) 2026 HMCL - Hijaiyyah Mathematics Computational Laboratory

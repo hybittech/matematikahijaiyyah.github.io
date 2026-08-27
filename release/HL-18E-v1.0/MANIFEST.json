@@ -2,7 +2,8 @@
   "release": "HL-18E-v1.0",
   "version": "HM-28-v1.0-HC18D",
   "date": "2026",
-  "author": "Firman Arief Hidayatullah",
+  "author": "Maulana Amratulloh",
+  "author_role": "Inventor & Chief Architect",
   "components": [
     "master_table",
     "hl18e",

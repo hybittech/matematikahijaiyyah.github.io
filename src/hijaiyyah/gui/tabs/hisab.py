@@ -10,29 +10,20 @@ Interactive GUI for the HISAB protocol:
 
 from __future__ import annotations
 
-import struct
 import tkinter as tk
 from tkinter import ttk
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from ...core.master_table import MasterTable
-from ...core.exomatrix import build_exomatrix
 from ...hisab.protocol import (
-    FrameType,
-    HisabFrame,
     ALL_GUARDS_PASS,
-    MAGIC,
-    VERSION,
 )
 from ...hisab.serialize import (
+    deserialize_letter_payload,
     serialize_letter,
     serialize_string,
-    deserialize_letter_payload,
-    _compute_guard_status,
-    _nibble_pack,
 )
-from ...hisab.validate import validate_frame, ValidationReport
-from ...hisab.digest import compute_digest
+from ...hisab.validate import validate_frame
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
 
@@ -427,7 +418,7 @@ class HISABTab:
 
         # Highlight changed byte
         parts: list[str] = []
-        for i, b in enumerate(corrupted):
+        for _i, b in enumerate(corrupted):
             parts.append(f"{b:02X}")
         hex_line = " ".join(parts)
         self._cor_out.writeln(f"  {hex_line}", "hex_bad")

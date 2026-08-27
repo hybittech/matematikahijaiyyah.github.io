@@ -21,7 +21,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Optional, List, Dict
+from typing import Any, ClassVar, Dict, List, Optional
 
 # ── Re-export from language/ ──────────────────────────────────
 
@@ -99,7 +99,7 @@ class HCCompiler:
     """
 
     VERSION = "1.0.0"
-    STAGES = list(CompileStage)
+    STAGES: ClassVar[list[CompileStage]] = list(CompileStage)
 
     def __init__(self, options: Optional[CompileOptions] = None):
         self.options = options or CompileOptions()
@@ -238,11 +238,11 @@ def compile_hc(source: str, **kwargs) -> CompileResult:
 
 
 __all__ = [
-    "HCCompiler",
-    "CompileResult",
     "CompileOptions",
+    "CompileResult",
     "CompileStage",
-    "compile_hc",
+    "HCCompiler",
     "HCLexer",
     "HCParser",
+    "compile_hc",
 ]

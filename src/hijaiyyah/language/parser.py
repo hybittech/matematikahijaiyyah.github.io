@@ -9,33 +9,33 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-from hijaiyyah.language.lexer import Token, TokenType
 from hijaiyyah.language.ast_nodes import (
-    ASTNode,
-    Program,
-    LetStmt,
-    ConstStmt,
-    ExpressedStmt,
-    ReturnStmt,
-    Block,
-    FnDecl,
-    Literal,
-    VarRef,
-    BinaryExpr,
-    MethodCall,
-    CallExpr,
-    ModuleAccess,
-    IfExpr,
-    RangeExpr,
-    MatchExpr,
-    MatchArm,
-    ForStmt,
-    WhileStmt,
-    IndexExpr,
     ArrayLiteral,
+    ASTNode,
+    BinaryExpr,
+    Block,
     BreakStmt,
+    CallExpr,
+    ConstStmt,
     ContinueStmt,
+    ExpressedStmt,
+    FnDecl,
+    ForStmt,
+    IfExpr,
+    IndexExpr,
+    LetStmt,
+    Literal,
+    MatchArm,
+    MatchExpr,
+    MethodCall,
+    ModuleAccess,
+    Program,
+    RangeExpr,
+    ReturnStmt,
+    VarRef,
+    WhileStmt,
 )
+from hijaiyyah.language.lexer import Token, TokenType
 
 
 class ParseError(Exception):

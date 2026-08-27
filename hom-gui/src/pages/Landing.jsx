@@ -63,7 +63,7 @@ function NodeBox({ label, sub, formula, color, borderColor, bgColor, small, clas
 const stats = [
   { label: 'Letters', value: '28', sub: 'Canonical Hijaiyyah', icon: Languages, color: 'text-hom-accent' },
   { label: 'Dimensions', value: '18', sub: 'Integer Vector Space', icon: Layers, color: 'text-hom-gold' },
-  { label: 'Tests', value: '1,611', sub: 'All PASS · 0 FAIL', icon: ShieldCheck, color: 'text-hom-green' },
+  { label: 'Tests', value: '1,628', sub: 'All PASS · 0 FAIL', icon: ShieldCheck, color: 'text-hom-green' },
   { label: 'ROM', value: '252', sub: 'Bytes (nibble-packed)', icon: Cpu, color: 'text-hom-purple' },
 ];
 
@@ -212,7 +212,7 @@ export default function Landing() {
                   HM-28-v1.2-HC18D
                 </span>
                 <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-hom-green/10 text-hom-green border border-hom-green/20">
-                  1,611 PASS · 0 FAIL
+                  1,628 PASS · 0 FAIL
                 </span>
               </div>
             </div>
@@ -1118,7 +1118,7 @@ export default function Landing() {
             </span>
           </div>
           <div className="mt-2 text-center text-[10px] text-hom-muted">
-            {t('Full test suite: 1,611 passed · 0 skipped · 0 failed in ~46s')}
+            {t('Full test suite: 1,628 passed · 0 skipped · 0 failed in ~0.7s')}
           </div>
         </GlassPanel>
       </section>
@@ -1161,7 +1161,7 @@ export default function Landing() {
             <div className="mt-4 space-y-2 text-xs text-hom-muted">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-hom-green" />
-                {t('Python 3.11+ backend — 1,611 tests')}
+                {t('Python 3.11+ backend — 1,628 tests')}
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-hom-accent" />
@@ -1352,7 +1352,7 @@ npm run dev
               
               {/* Center Signature Details */}
               <div className="flex flex-col items-center text-center space-y-2">
-                <span className="text-hom-gold font-bold tracking-wide text-sm">Firman Arief Hidayatullah</span>
+                <span className="text-hom-gold font-bold tracking-wide text-sm">Maulana Amratulloh</span>
                 <span className="text-hom-muted">{t('Founder & Principal Architect')}</span>
                 
                 <div className="flex flex-col items-center mt-4">

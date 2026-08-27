@@ -1,26 +1,14 @@
-"""Field 5: Hijaiyyah Exomatrix Analysis (Bab II-E, Ch 32-36)."""
+"""Field 5: Hijaiyyah Exometric analysis (Bab II-E, Ch 32-36)."""
 
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..core.codex_entry import CodexEntry
+import numpy as np
+
 from ..core.exomatrix import build_exomatrix
 from ..core.master_table import MASTER_TABLE
-
-
-def _v(h: Any) -> List[int]:
-    """Extract v18 vector from CodexEntry or list."""
-    if isinstance(h, CodexEntry):
-        return list(h.vector)
-    if isinstance(h, (list, tuple)):
-        return list(h)
-    raise TypeError(f"Expected vector-like, got {type(h).__name__}")
-
-
-def _n2(v: List[int]) -> int:
-    """‖v₁₄‖² = Σ v[k]² for k = 0..13."""
-    return sum(v[k] * v[k] for k in range(14))
+from ._common import _n2
 
 
 def build(h: Any) -> List[List[int]]:
@@ -84,7 +72,9 @@ def string_exomatrix(text: str) -> List[List[int]]:
 
 
 def rank_M14() -> int:
-    return 14
+    es = MASTER_TABLE.all_entries()
+    M = np.array([list(e.vector)[:14] for e in es])
+    return int(np.linalg.matrix_rank(M))
 
 
 def rank_M() -> int:

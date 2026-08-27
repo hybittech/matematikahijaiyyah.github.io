@@ -13,30 +13,29 @@ from typing import Optional
 from ..core.master_table import MASTER_TABLE
 from ..hisa.machine import HISAMachine
 from ..language.evaluator import HCEvaluator
-
-from .theme import (
-    THEME,
-    configure_styles,
-    APP_TITLE,
-    APP_VERSION,
-    MIN_SIZE,
-    LOGO_PATH,
-    MATH_LOGO_PATH,
-)
-from .tabs.letter_explorer import LetterExplorerTab
-from .tabs.master_table import MasterTableTab
-from .tabs.theorems import TheoremTab
-from .tabs.string_integral import StringIntegralTab
 from .tabs.audit import AuditTab
-from .tabs.five_fields import FiveFieldsTab
-from .tabs.geometry import GeometryTab
-from .tabs.ide import IDETab
-from .tabs.hisa_machine import HISAMachineTab
 from .tabs.bytecode import BytecodeTab
 from .tabs.csgi import CSGiTab
 from .tabs.export import ExportTab
+from .tabs.five_fields import FiveFieldsTab
+from .tabs.geometry import GeometryTab
+from .tabs.hisa_machine import HISAMachineTab
 from .tabs.hisab import HISABTab
+from .tabs.ide import IDETab
+from .tabs.letter_explorer import LetterExplorerTab
+from .tabs.master_table import MasterTableTab
 from .tabs.release import ReleaseTab
+from .tabs.string_integral import StringIntegralTab
+from .tabs.theorems import TheoremTab
+from .theme import (
+    APP_TITLE,
+    APP_VERSION,
+    LOGO_PATH,
+    MATH_LOGO_PATH,
+    MIN_SIZE,
+    THEME,
+    configure_styles,
+)
 
 
 class HOMApp:

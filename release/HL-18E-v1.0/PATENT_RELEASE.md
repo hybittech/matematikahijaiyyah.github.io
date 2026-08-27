@@ -2,7 +2,7 @@
 
 **Target Dataset:** `Master Table MH-28-v.1.0-HC18D`
 **Date of Release:** March 2026
-**Author & Copyright:** Firman Arief Hidayatullah, © 2026 HMCL
+**Author & Copyright:** Maulana Amratulloh, © 2026 HMCL
 
 ## 1. Mathematical Seal
 

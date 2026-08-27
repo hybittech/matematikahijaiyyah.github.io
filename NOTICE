@@ -1,0 +1,54 @@
+================================================================================
+NOTICE
+Matematika Hijaiyyah / Hijaiyyah Operating Machine (HOM)
+================================================================================
+
+Copyright (c) 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+All Rights Reserved.
+
+Inventor & Chief Architect:  Maulana Amratulloh
+
+This product includes the formal system "Matematika Hijaiyyah" and every
+artifact derived from it, including but not limited to the Master Table
+HM-28 dataset, the Codex 14D/18D representation, the Guard System, the
+Metrik-Vektorial operations, the Hybit paradigm, the H-ISA instruction set,
+and the HCPU hardware architecture.
+
+--------------------------------------------------------------------------------
+LICENSE
+
+This software is distributed under a proprietary license. See the LICENSE
+file for the full terms. It is not open-source software, and no rights are
+granted except those stated explicitly in LICENSE.
+
+--------------------------------------------------------------------------------
+ATTRIBUTION REQUIREMENT
+
+Any permitted use, citation, or reference to this work must attribute it as:
+
+    Maulana Amratulloh, "Matematika Hijaiyyah: Fondasi Formal, Codex
+    Teknologi, dan Arsitektur Hybit", Hijaiyyah Mathematics Computational
+    Laboratory (HMCL), 2026.
+
+BibTeX:
+
+    @book{amratulloh2026hijaiyyah,
+      author    = {Maulana Amratulloh},
+      title     = {Matematika Hijaiyyah: Fondasi Formal, Codex Teknologi,
+                   dan Arsitektur Hybit},
+      publisher = {Hijaiyyah Mathematics Computational Laboratory},
+      year      = {2026},
+      note      = {Master Table HM-28-v.1.0-HC18D}
+    }
+
+--------------------------------------------------------------------------------
+DATASET SEAL
+
+The canonical Master Table is sealed by SHA-256:
+
+    f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8
+
+Any copy whose seal differs is not the canonical dataset and carries no
+warranty of correctness under this NOTICE.
+
+================================================================================

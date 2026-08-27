@@ -21,10 +21,10 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, List, Optional, Tuple
 
-from ...core.master_table import MasterTable
-from ...core.codex_entry import CodexEntry
 from ...algebra import intrametric as geo
 from ...algebra import vektronometry as vec
+from ...core.codex_entry import CodexEntry
+from ...core.master_table import MasterTable
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
 
@@ -124,7 +124,7 @@ class GeometryTab:
             ("م↔هـ", "م", "هـ", "Loop pair"),
             ("ا↔ب", "ا", "ب", "Orthogonal"),
         ]
-        for label, ch1, ch2, desc in quick_pairs:
+        for label, ch1, ch2, _desc in quick_pairs:
             ttk.Button(
                 pair_bar,
                 text=f"{label}",
@@ -336,7 +336,7 @@ class GeometryTab:
         w.writeln(f"   {'Layer':<22} {'Value':<8} {'% of d₂²':<10} {'Description'}", "field")
         w.writeln("   " + "─" * 52, "dim")
 
-        for name, val, desc in layers:
+        for name, val, _desc in layers:
             pct = val / total * 100 if total > 0 else 0
             bar_len = int(pct / 4)
             w.writeln(

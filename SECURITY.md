@@ -371,7 +371,7 @@ Pelapor kerentanan yang valid akan menerima kredit di:
 
 | Nama | Peran |
 |---|---|
-| Firman Arief Hidayatullah | Lead Maintainer |
+| Maulana Amratulloh | Lead Maintainer |
 
 ---
 

@@ -1,11 +1,11 @@
-"""Field 3: Hijaiyyah Integral Vector Calculus (Bab II-C, Ch 25-28)."""
+"""Field 3: Hijaiyyah Aggregametric (Bab II-C, Ch 25-28)."""
 
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..core.guards import compute_U
 from ..core.exomatrix import build_exomatrix
+from ..core.guards import compute_U
 from ..core.master_table import MASTER_TABLE
 
 

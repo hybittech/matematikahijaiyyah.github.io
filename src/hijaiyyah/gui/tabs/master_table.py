@@ -1,13 +1,15 @@
 """Tab: Master Table — treeview of all 28 letters."""
 
 from __future__ import annotations
+
 import tkinter as tk
 from tkinter import ttk
-from ...core.master_table import MasterTable
+
 from ...core.constants import V18_SLOTS
+from ...core.master_table import MasterTable
 from ..theme import THEME
 
-TABLE_COLUMNS = ["#", "Huruf", "Name"] + list(V18_SLOTS)
+TABLE_COLUMNS = ["#", "Huruf", "Name", *list(V18_SLOTS)]
 
 
 class MasterTableTab:

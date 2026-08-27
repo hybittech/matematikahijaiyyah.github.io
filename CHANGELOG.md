@@ -218,8 +218,8 @@ Ini adalah rilis pertama. Tidak ada migrasi yang diperlukan.
 ### Release Signature
 
 ```
-Signed:     Firman Arief Hidayatullah
-Key ID:     FAH-SIG
+Signed:     Maulana Amratulloh
+Key ID:     MA-SIG
 Release:    HM-28-v1.0-HC18D-B84D025
 Seal:       VERIFIED & SEALED
 Copyright:  © 2026 HMCL

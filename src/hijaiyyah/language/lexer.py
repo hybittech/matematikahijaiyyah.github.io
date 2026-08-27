@@ -9,16 +9,16 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+from hijaiyyah.core.constants import H28_SINGLE_CHARS, HAA_FIRST, HAA_SECOND, HAA_SEQUENCE
+from hijaiyyah.core.exceptions import LexerError
 from hijaiyyah.language.tokens import (
-    TokenType,
-    Token,
+    ESCAPE_MAP,
     KEYWORDS,
     MULTI_CHAR_OPS,
     SINGLE_CHAR_OPS,
-    ESCAPE_MAP,
+    Token,
+    TokenType,
 )
-from hijaiyyah.core.constants import H28_SINGLE_CHARS, HAA_SEQUENCE, HAA_FIRST, HAA_SECOND
-from hijaiyyah.core.exceptions import LexerError
 
 
 class Lexer:

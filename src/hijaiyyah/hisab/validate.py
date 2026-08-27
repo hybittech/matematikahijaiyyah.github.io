@@ -12,24 +12,17 @@ import struct
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
+from .digest import compute_digest
 from .protocol import (
+    DIGEST_SIZE,
+    GUARD_SIZE,
+    HEADER_SIZE,
     MAGIC,
+    PAYLOAD_SIZES,
     VERSION,
     FrameType,
-    PAYLOAD_SIZES,
-    HEADER_SIZE,
-    GUARD_SIZE,
-    DIGEST_SIZE,
-    GUARD_G1_BIT,
-    GUARD_G2_BIT,
-    GUARD_G3_BIT,
-    GUARD_G4_BIT,
-    GUARD_T1_BIT,
-    GUARD_T2_BIT,
 )
-from .digest import compute_digest
-from .serialize import _nibble_unpack, _compute_guard_status
-
+from .serialize import _compute_guard_status, _nibble_unpack
 
 # ── Validation result ───────────────────────────────────────────
 
@@ -70,7 +63,11 @@ class ValidationReport:
 
 # ── Level 1: Structural Validation (§4.12) ──────────────────────
 
-def _validate_structural(data: bytes) -> Tuple[List[ValidationResult], Optional[Tuple[FrameType, bytes, int]]]:
+# What a successful structural pass hands to the semantic level.
+StructuralParse = Optional[Tuple[FrameType, bytes, int]]
+
+
+def _validate_structural(data: bytes) -> Tuple[List[ValidationResult], StructuralParse]:
     """
     Level 1: structural checks S1–S5.
 
@@ -128,8 +125,10 @@ def _validate_structural(data: bytes) -> Tuple[List[ValidationResult], Optional[
     stored_crc = struct.unpack("<I", data[-(DIGEST_SIZE):])[0]
     computed_crc = compute_digest(digest_data)
     if stored_crc != computed_crc:
-        results.append(ValidationResult("STRUCT", "S5_CRC32", False,
-                                        f"CRC mismatch: stored=0x{stored_crc:08X}, computed=0x{computed_crc:08X}"))
+        results.append(ValidationResult(
+            "STRUCT", "S5_CRC32", False,
+            f"CRC mismatch: stored=0x{stored_crc:08X}, computed=0x{computed_crc:08X}",
+        ))
         return results, None
     results.append(ValidationResult("STRUCT", "S5_CRC32", True,
                                     f"CRC32 = 0x{computed_crc:08X} ✓"))

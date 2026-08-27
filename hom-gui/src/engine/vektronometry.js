@@ -1,7 +1,7 @@
 // VTM — Vektronometry: composition metrics
 
 export function computeVektronometry(v18) {
-  const AN = v18[15], AK = v18[16], AQ = v18[17];
+  const AN = v18[14], AK = v18[15], AQ = v18[16];
   const Atotal = AN + AK + AQ;
 
   const rN = Atotal > 0 ? AN / Atotal : 0;

@@ -25,11 +25,11 @@ export function aggregateString(text, masterTable) {
   const U = Qx + Qs + Qa + 4 * Qc;
   const rho = theta - U;
 
-  const AN = sum[15];
+  const AN = sum[14];
   const sumN = sum[1] + sum[2] + sum[3];
-  const AK = sum[16];
+  const AK = sum[15];
   const sumK = sum[4] + sum[5] + sum[6] + sum[7] + sum[8];
-  const AQ = sum[17];
+  const AQ = sum[16];
   const sumQ = sum[9] + sum[10] + sum[11] + sum[12] + sum[13];
 
   return {

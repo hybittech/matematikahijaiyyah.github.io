@@ -14,7 +14,6 @@ Total register file: 16 × 18 × 2 = 576 bytes.
 from dataclasses import dataclass, field
 from typing import List
 
-
 HREG_COUNT: int = 16
 GPR_COUNT: int = 18
 STACK_SIZE: int = 1024

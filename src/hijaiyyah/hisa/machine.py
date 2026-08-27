@@ -14,11 +14,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
-from .registers import RegisterFile, HREG_COUNT
-from .opcodes import OpCode, InstructionWord
-from ..core.master_table import MasterTable
-from ..core.guards import guard_check, compute_U, full_guard_check
 from ..core.exomatrix import build_exomatrix
+from ..core.guards import compute_U, full_guard_check, guard_check
+from ..core.master_table import MasterTable
+from .opcodes import InstructionWord, OpCode
+from .registers import HREG_COUNT, RegisterFile
 
 
 @dataclass
@@ -318,31 +318,31 @@ class HISAMachine:
             if self.regs.sr.guard_pass:
                 self.regs.pc = imm
                 return f"JGP → {imm} (guard PASS)"
-            return f"JGP — no jump (guard FAIL)"
+            return "JGP — no jump (guard FAIL)"
 
         if op == OpCode.JGF:
             if not self.regs.sr.guard_pass:
                 self.regs.pc = imm
                 return f"JGF → {imm} (guard FAIL)"
-            return f"JGF — no jump (guard PASS)"
+            return "JGF — no jump (guard PASS)"
 
         if op == OpCode.JNP:
             if not self.regs.sr.guard_pass:
                 self.regs.pc = imm
                 return f"JNP → {imm} (not pass)"
-            return f"JNP — no jump (pass)"
+            return "JNP — no jump (pass)"
 
         if op == OpCode.JEQ:
             if self.regs.sr.zero:
                 self.regs.pc = imm
                 return f"JEQ → {imm} (equal)"
-            return f"JEQ — no jump (not equal)"
+            return "JEQ — no jump (not equal)"
 
         if op == OpCode.JNE:
             if not self.regs.sr.zero:
                 self.regs.pc = imm
                 return f"JNE → {imm} (not equal)"
-            return f"JNE — no jump (equal)"
+            return "JNE — no jump (equal)"
 
         # ── Subroutine ──────────────────────────────────────────
         if op == OpCode.CALL:

@@ -22,18 +22,17 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, List, Optional, Tuple
 
-from ...core.master_table import MasterTable, MASTER_TABLE
-from ...core.codex_entry import CodexEntry
-from ...core.guards import guard_check, compute_U
-from ...core.exomatrix import build_exomatrix
-from ...algebra import vektronometry as vec
-from ...algebra import normivektor as diff
 from ...algebra import aggregametric as integ
-from ...algebra import intrametric as geo
 from ...algebra import exometric as exo
+from ...algebra import intrametric as geo
+from ...algebra import normivektor as diff
+from ...algebra import vektronometry as vec
+from ...core.codex_entry import CodexEntry
+from ...core.exomatrix import build_exomatrix
+from ...core.guards import compute_U, guard_check
+from ...core.master_table import MASTER_TABLE, MasterTable
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ── Structure classification helpers ─────────────────────────────
 
@@ -454,7 +453,7 @@ class FiveFieldsTab:
         w.writeln()
 
         ref_letters = [("ا", "Alif"), ("ب", "Ba"), ("هـ", "Ha")]
-        for ref_ch, ref_name in ref_letters:
+        for ref_ch, _ref_name in ref_letters:
             if ref_ch == entry.char:
                 continue
             ref_entry = self._table.get_by_char(ref_ch)
@@ -688,8 +687,11 @@ class FiveFieldsTab:
         ]
         expected_eval: List[int] = [2 * v[0], 2 * v[14], v[15], v[16], v[17] + v[15] + v[16]]
         for r in range(5):
-            rs[r] == expected_eval[r]
-            w.writeln(f"   σ_{r} = {rs[r]:>4d}  (expected: {expected[r]})", "dim")
+            ok = rs[r] == expected_eval[r]
+            w.writeln(
+                f"   σ_{r} = {rs[r]:>4d}  (expected: {expected[r]})  {'✓' if ok else '✗'}",
+                "pass" if ok else "fail",
+            )
         w.writeln()
 
         # ── R1–R5 audit (Identity 33.1.1)

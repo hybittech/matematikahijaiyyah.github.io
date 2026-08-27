@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox, ttk
 from typing import Any, Optional
 
 from ...core.master_table import MasterTable
-from ..theme import THEME, APP_VERSION
+from ..theme import APP_VERSION, THEME
 from ..widgets import OutputWriter, make_text
 
 try:
@@ -111,8 +111,8 @@ class CSGiTab:
             return
 
         try:
-            from ...skeleton.skeletonizer import zhang_suen_thinness
             from ...skeleton.contractor import SkeletonContractor
+            from ...skeleton.skeletonizer import zhang_suen_thinness
 
             img_pil = Image.open(glyph_path).convert("L")
             arr = np.array(img_pil)

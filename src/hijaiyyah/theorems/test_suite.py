@@ -1,11 +1,13 @@
 """Complete 13-test theorem suite (HC Spec v1.0)."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import List
+
+from ..algebra import aggregametric, exometric, intrametric, vektronometry
+from ..core.guards import compute_U, guard_check, guard_detail
 from ..core.master_table import MASTER_TABLE
-from ..core.guards import guard_check, guard_detail, compute_U
-from ..algebra import vektronometry, aggregametric, intrametric, exometric
 
 
 @dataclass
@@ -108,7 +110,9 @@ class TheoremTestSuite:
             assert v == v2, f"{e.char}"
 
     def _anagram(self):
-        assert aggregametric.string_integral("بسم")["cod18"] == aggregametric.string_integral("سبم")["cod18"]
+        bsm = aggregametric.string_integral("بسم")["cod18"]
+        sbm = aggregametric.string_integral("سبم")["cod18"]
+        assert bsm == sbm
 
     def _guard_d(self):
         for e in self._entries():

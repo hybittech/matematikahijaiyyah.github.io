@@ -13,22 +13,20 @@ from __future__ import annotations
 import struct
 from typing import List, Optional, Sequence, Tuple, Union
 
+from .digest import compute_digest
 from .protocol import (
-    MAGIC,
-    VERSION,
-    FrameType,
-    HisabFrame,
-    NIBBLE_PAIRS,
-    ALL_GUARDS_PASS,
     GUARD_G1_BIT,
     GUARD_G2_BIT,
     GUARD_G3_BIT,
     GUARD_G4_BIT,
     GUARD_T1_BIT,
     GUARD_T2_BIT,
+    MAGIC,
+    NIBBLE_PAIRS,
+    VERSION,
+    FrameType,
+    HisabFrame,
 )
-from .digest import compute_digest
-
 
 # ── Guard status computation ────────────────────────────────────
 
@@ -233,7 +231,11 @@ def deserialize_string_payload(payload: bytes) -> Tuple[int, Tuple[int, ...]]:
     return n, tuple(components)
 
 
-def deserialize_frame(data: bytes) -> Optional[Tuple[FrameType, Union[Tuple[int, ...], Tuple[int, Tuple[int, ...]]]]]:
+# A decoded payload is either a bare 18-component vector or an indexed one.
+FramePayload = Union[Tuple[int, ...], Tuple[int, Tuple[int, ...]]]
+
+
+def deserialize_frame(data: bytes) -> Optional[Tuple[FrameType, FramePayload]]:
     """
     Deserialize a complete HISAB frame from raw bytes.
 

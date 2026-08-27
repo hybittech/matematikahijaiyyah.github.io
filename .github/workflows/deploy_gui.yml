@@ -15,10 +15,20 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
+      # Without this the build runs on whatever Node the runner ships with.
+      # Vite 8 needs a modern one, and that mismatch is what broke this
+      # workflow in April.
+      - name: Set up Node 🟢
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: hom-gui/package-lock.json
+
       - name: Install and Build 🔧
+        working-directory: hom-gui
         run: |
-          cd hom-gui
-          npm install
+          npm ci
           npm run build
 
       - name: Deploy 🚀

@@ -2,10 +2,13 @@
 Opcode definitions and instruction word encoding.
 
 Bab III §3.24–3.25: H-ISA Instruction Set Architecture.
-Opcode space: 256 possible, ~30 used — substantial expansion margin.
+Opcode space: 256 possible. 44 distinct opcode values are defined here
+(47 names, of which 3 are legacy aliases). The HCPU RTL implements a
+28-opcode subset — see rtl/hcpu_pkg.vh.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import IntEnum
 

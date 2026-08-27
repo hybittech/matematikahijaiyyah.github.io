@@ -501,7 +501,7 @@ silakan hubungi maintainer sebelum berkontribusi.
 
 | Nama | Peran |
 |---|---|
-| Firman Arief Hidayatullah | Perancang & Perumus |
+| Maulana Amratulloh | Perancang & Perumus |
 
 ### Cara menghubungi
 

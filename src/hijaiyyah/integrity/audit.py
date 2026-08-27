@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from ..core.guards import compute_rho, compute_U, guard_check
 from ..core.master_table import MASTER_TABLE
-from ..core.guards import guard_check, compute_U, compute_rho
 from .injectivity import InjectivityVerifier
 
 

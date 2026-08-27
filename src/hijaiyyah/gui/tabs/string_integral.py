@@ -22,13 +22,12 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, List, Optional, Tuple
 
-from ...core.master_table import MasterTable
-from ...core.guards import compute_U
 from ...algebra import aggregametric as integ
 from ...algebra import exometric as exo
+from ...core.guards import compute_U
+from ...core.master_table import MasterTable
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ── Preset strings for quick analysis ────────────────────────────
 
@@ -140,7 +139,7 @@ class StringIntegralTab:
         preset_frame.pack(fill=tk.X, pady=2)
         ttk.Label(preset_frame, text="Presets:", foreground=THEME.dim_fg).pack(side=tk.LEFT)
 
-        for text, desc in PRESETS:
+        for text, _desc in PRESETS:
             ttk.Button(
                 preset_frame,
                 text=text,

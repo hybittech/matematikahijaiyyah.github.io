@@ -18,28 +18,27 @@ import hashlib
 import math
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from hijaiyyah.core.exceptions import EBNFSemanticError
+from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
 from hijaiyyah.language.ast_nodes import (
     ASTNode,
-    Program,
-    LetStmt,
+    BinaryExpr,
+    Block,
+    CallExpr,
     ConstStmt,
     ExpressedStmt,
-    ReturnStmt,
-    Block,
     FnDecl,
-    Literal,
-    VarRef,
-    BinaryExpr,
-    MethodCall,
-    CallExpr,
-    ModuleAccess,
     IfExpr,
-    RangeExpr,
+    LetStmt,
+    Literal,
     MatchExpr,
+    MethodCall,
+    ModuleAccess,
+    Program,
+    RangeExpr,
+    ReturnStmt,
+    VarRef,
 )
-from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
-from hijaiyyah.core.exceptions import EBNFSemanticError
-
 
 # ══════════════════════════════════════════════════════════════════
 #  SECTION 1 — VECTOR PRIMITIVES

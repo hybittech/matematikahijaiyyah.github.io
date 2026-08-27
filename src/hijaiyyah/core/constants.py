@@ -4,6 +4,7 @@ All values are derived from the Master Table HM-28-v1.0-HC18D.
 """
 
 from __future__ import annotations
+
 from typing import Dict, FrozenSet, Tuple
 
 # ── Alphabet ─────────────────────────────────────────────────────

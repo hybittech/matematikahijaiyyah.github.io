@@ -17,12 +17,11 @@ from tkinter import ttk
 from typing import Dict, Optional
 
 from ...core.master_table import MASTER_TABLE
+from ...hisa.assembler import assemble
 from ...hisa.machine import HISAMachine
 from ...hisa.opcodes import InstructionWord
-from ...hisa.assembler import assemble
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ── Demo Programs (H-ISA Assembly) ───────────────────────────────
 

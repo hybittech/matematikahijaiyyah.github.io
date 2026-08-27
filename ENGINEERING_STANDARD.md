@@ -272,7 +272,7 @@ name = "hijaiyyah-hom"
 version = "1.0.0"
 description = "Hijaiyyah Operating Machine — Core Computational System"
 authors = [
-    { name = "Firman Arief Hidayatullah" },
+    { name = "Maulana Amratulloh" },
     { name = "Hijaiyyah Mathematics Computational Laboratory (HMCL)" }
 ]
 requires-python = ">=3.11"
