@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from enum import IntFlag
 from typing import List, Optional
 
-
 # Magic number: "HBYT"
 HBC_MAGIC = b"HBYT"
 HBC_HEADER_SIZE = 32
@@ -143,7 +142,6 @@ class HbcFile:
         # Compute offsets
         const_off = HBC_HEADER_SIZE
         code_off = const_off + len(self.constants)
-        data_off = code_off + len(self.code)
 
         self.header.const_offset = const_off
         self.header.code_offset = code_off

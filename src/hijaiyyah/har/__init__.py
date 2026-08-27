@@ -16,9 +16,9 @@ Bab III §3.27.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
-import hashlib
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
@@ -280,9 +280,9 @@ class HARRegistry:
 
 
 __all__ = [
-    "HARRegistry",
     "HAREntry",
+    "HARManifestEntry",
+    "HARRegistry",
     "HARStatus",
     "HARValidation",
-    "HARManifestEntry",
 ]

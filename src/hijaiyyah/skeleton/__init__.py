@@ -1,5 +1,5 @@
 """CSGi: Canonical Skeleton Graph Interface."""
 
-from .skeletonizer import zhang_suen_thinness
 from .contractor import SkeletonContractor
-from .csgi import CSGIGraph, CSGINode, CSGIEdge
+from .csgi import CSGIEdge, CSGIGraph, CSGINode
+from .skeletonizer import zhang_suen_thinness

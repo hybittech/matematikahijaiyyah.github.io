@@ -21,16 +21,15 @@ import platform
 import sys
 import time
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog, ttk
 from typing import Dict, List, Optional
 
+from ...core.guards import guard_check
 from ...core.master_table import MasterTable
 from ...core.rom import pack_rom, rom_sha256
-from ...core.guards import guard_check
 from ...integrity.injectivity import InjectivityVerifier
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ── Release metadata ─────────────────────────────────────────────
 

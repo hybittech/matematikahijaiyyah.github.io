@@ -1,9 +1,10 @@
 """Field 2: Hijaiyyah Normivektor (Bab II-B, Ch 22-24)."""
 
 from __future__ import annotations
+
 import math
 from typing import Any, Dict, List, Tuple
-from ..core.codex_entry import CodexEntry
+
 from ..core.master_table import MASTER_TABLE
 from ._common import _v
 

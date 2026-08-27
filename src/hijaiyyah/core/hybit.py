@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Tuple
 
-from .guards import compute_U, compute_rho, guard_check, full_guard_check
 from .exomatrix import build_exomatrix
+from .guards import compute_rho, compute_U, full_guard_check, guard_check
 
 
 class Hybit:

@@ -6,7 +6,6 @@ from typing import Dict, List
 
 from .opcodes import OpCode
 
-
 # Opcode name → integer mapping
 _OP_MAP: Dict[str, int] = {}
 for _name, _val in OpCode.__members__.items():

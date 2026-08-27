@@ -1,6 +1,7 @@
 """HC18DC JSON format."""
 
 import json
+
 from ..core.guards import guard_check
 from ..crypto.hashing import sha256_vector
 

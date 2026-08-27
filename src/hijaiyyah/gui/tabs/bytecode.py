@@ -16,11 +16,10 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Dict, Optional
 
-from ...hisa.opcodes import InstructionWord
 from ...core.master_table import MASTER_TABLE
+from ...hisa.opcodes import InstructionWord
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ── Opcode documentation ─────────────────────────────────────────
 

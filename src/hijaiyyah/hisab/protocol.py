@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Tuple
 
-
 # ── Magic & Version (§4.5.2, §4.5.3) ────────────────────────────
 
 MAGIC = b"\x48\x42"  # "HB" — Hybit

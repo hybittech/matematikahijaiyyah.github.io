@@ -10,15 +10,17 @@ Bab II: Sistem Operasi Metrik-Vektorial Hijaiyah.
 Backward-compatible aliases are provided for the old names.
 """
 
-from . import vektronometry  # noqa: F401
-from . import normivektor  # noqa: F401
-from . import aggregametric  # noqa: F401
-from . import intrametric  # noqa: F401
-from . import exometric  # noqa: F401
+from . import (
+    aggregametric,
+    exometric,
+    intrametric,
+    normivektor,
+    vektronometry,
+)
+from . import aggregametric as integral
+from . import exometric as exomatrix_analysis
+from . import intrametric as geometry
+from . import normivektor as differential
 
 # ── Backward-compatible aliases (v1.0 → v1.2) ──
-from . import vektronometry as vectronometry  # noqa: F401
-from . import normivektor as differential  # noqa: F401
-from . import aggregametric as integral  # noqa: F401
-from . import intrametric as geometry  # noqa: F401
-from . import exometric as exomatrix_analysis  # noqa: F401
+from . import vektronometry as vectronometry

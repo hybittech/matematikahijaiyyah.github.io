@@ -1,14 +1,13 @@
 """Field 1: Hijaiyyah Vektronometry (Bab II-A, Ch 17-21)."""
 
 from __future__ import annotations
+
 import math
 from typing import Any, Dict, List
-from ..core.codex_entry import CodexEntry
+
 from ..core.guards import compute_U
 from ..core.master_table import MASTER_TABLE
-
-
-from ._common import _v, _n2
+from ._common import _n2, _v
 
 
 def _ip(a: List[int], b: List[int]) -> int:

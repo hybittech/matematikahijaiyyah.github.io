@@ -20,15 +20,14 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, Dict, List, Optional, Tuple
 
-from ...core.master_table import MasterTable
-from ...core.codex_entry import CodexEntry
-from ...core.guards import guard_check, guard_detail, compute_U, compute_rho
-from ...core.exomatrix import build_exomatrix
-from ...algebra import vektronometry as vec
-from ...algebra import intrametric as geo
 from ...algebra import exometric as exo
+from ...algebra import intrametric as geo
+from ...algebra import vektronometry as vec
+from ...core.codex_entry import CodexEntry
+from ...core.exomatrix import build_exomatrix
+from ...core.guards import compute_rho, compute_U, guard_check, guard_detail
+from ...core.master_table import MasterTable
 from ..theme import THEME
-
 
 # ── Color utilities ──────────────────────────────────────────────
 

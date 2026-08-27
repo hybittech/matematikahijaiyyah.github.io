@@ -64,7 +64,9 @@ class MasterTable:
 
     def _load(self) -> None:
         chars = list(H28_ALPHABET)
-        for i, (ch, name, vec) in enumerate(zip(chars, _NAMES, _RAW)):
+        # strict=True: a length mismatch between the alphabet, the names, and
+        # _RAW must fail loudly, not silently load a shorter table.
+        for i, (ch, name, vec) in enumerate(zip(chars, _NAMES, _RAW, strict=True)):
             entry = CodexEntry(
                 index=i + 1,
                 char=ch,

@@ -16,15 +16,14 @@ from __future__ import annotations
 
 import time
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog, ttk
 from typing import Any, Dict, Optional
 
+from ...language.evaluator import HCEvaluator
 from ...language.lexer import Lexer
 from ...language.parser import Parser
-from ...language.evaluator import HCEvaluator
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
-
 
 # ══════════════════════════════════════════════════════════════════
 #  SECTION 1 — EXAMPLE PROGRAM LIBRARY

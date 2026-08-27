@@ -1,6 +1,6 @@
 """Quadrant decomposition: Θ̂ = U + ρ (Proposition 11.3.1)."""
 
-from ..core.guards import compute_U, compute_rho
+from ..core.guards import compute_rho, compute_U
 from ..core.master_table import MASTER_TABLE
 
 

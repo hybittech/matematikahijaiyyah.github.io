@@ -6,6 +6,6 @@ Author:  Maulana Amratulloh
 License: (c) 2026 HMCL
 """
 
-from .version import __version__, __release__, __dataset_release__  # noqa: F401
+from .version import __dataset_release__, __release__, __version__
 
 __author__ = "Maulana Amratulloh"

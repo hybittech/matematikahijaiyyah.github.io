@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..core.codex_entry import CodexEntry
+import numpy as np
+
 from ..core.exomatrix import build_exomatrix
 from ..core.master_table import MASTER_TABLE
-from ._common import _v, _n2
-import numpy as np
+from ._common import _n2
 
 
 def build(h: Any) -> List[List[int]]:

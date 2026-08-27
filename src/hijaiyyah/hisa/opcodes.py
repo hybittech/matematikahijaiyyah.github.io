@@ -8,6 +8,7 @@ Opcode space: 256 possible. 44 distinct opcode values are defined here
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import IntEnum
 

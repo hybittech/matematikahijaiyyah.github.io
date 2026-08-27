@@ -1,6 +1,7 @@
 """CodexEntry: the fundamental data type for a single letter's codex."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Tuple
 

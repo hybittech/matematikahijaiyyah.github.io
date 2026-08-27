@@ -17,7 +17,7 @@ from __future__ import annotations
 import struct
 import zlib
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 try:
     from hijaiyyah.hisa.assembler import Assembler as _BaseAssembler
@@ -241,14 +241,14 @@ class HASMAssembler:
 
 
 __all__ = [
-    "HASMAssembler",
-    "AssembleResult",
-    "HBCHeader",
-    "HBC_MAGIC",
-    "HBC_MAGIC_INT",
-    "HBC_HEADER_SIZE",
-    "FLAG_HAS_DEBUG",
-    "FLAG_HAS_PSI",
     "FLAG_GUARD_STRICT",
     "FLAG_HAR_EMBEDDED",
+    "FLAG_HAS_DEBUG",
+    "FLAG_HAS_PSI",
+    "HBC_HEADER_SIZE",
+    "HBC_MAGIC",
+    "HBC_MAGIC_INT",
+    "AssembleResult",
+    "HASMAssembler",
+    "HBCHeader",
 ]

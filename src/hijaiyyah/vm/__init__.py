@@ -33,8 +33,10 @@ except ImportError:
 
 try:
     from hijaiyyah.core.guards import (
-        check_guards as _check_guards,
         GuardResult as _GuardResult,
+    )
+    from hijaiyyah.core.guards import (
+        check_guards as _check_guards,
     )
 except ImportError:
     _check_guards = None
@@ -46,7 +48,7 @@ except ImportError:
     MASTER_TABLE = None
 
 try:
-    from hijaiyyah.assembler import HBCHeader, HBC_MAGIC_INT
+    from hijaiyyah.assembler import HBC_MAGIC_INT, HBCHeader
 except ImportError:
     HBCHeader = None
     HBC_MAGIC_INT = 0x48425954
@@ -336,15 +338,15 @@ class HVM:
 
 __all__ = [
     "HVM",
-    "HybitEngine",
-    "GuardSystem",
+    "HYBIT_DIM",
+    "NUM_REGISTERS",
+    "STACK_MAX",
+    "ExitCode",
     "GuardStatus",
+    "GuardSystem",
     "HCheck",
     "HCheckResult",
+    "HybitEngine",
     "HybitRegister",
     "VMFlags",
-    "ExitCode",
-    "NUM_REGISTERS",
-    "HYBIT_DIM",
-    "STACK_MAX",
 ]

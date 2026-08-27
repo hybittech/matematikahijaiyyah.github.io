@@ -1,11 +1,11 @@
 """Theme configuration for the HOM GUI."""
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Tuple
-from tkinter import ttk
-import os
 
+import os
+from dataclasses import dataclass
+from tkinter import ttk
+from typing import Tuple
 
 APP_TITLE = "HOM — Hijaiyyah Operating Machine"
 APP_VERSION = "HM-28-v1.0-HC18D"

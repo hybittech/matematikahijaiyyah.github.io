@@ -1,9 +1,11 @@
 """Tab: Data export (JSON, CSV, Manifest)."""
 
 from __future__ import annotations
+
 import json
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog, ttk
+
 from ...core.master_table import MasterTable
 from ..theme import APP_VERSION
 

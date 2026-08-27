@@ -24,10 +24,10 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
+from .guards import full_guard_check
 from .master_table import MASTER_TABLE
-from .guards import guard_check, full_guard_check
 from .rom import pack_rom, rom_sha256
 
 

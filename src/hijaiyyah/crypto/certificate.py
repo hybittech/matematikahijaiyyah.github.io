@@ -1,6 +1,7 @@
 """HybitCertificate: signed attestation of dataset integrity."""
 
 from dataclasses import dataclass
+
 from .signing import sign
 
 
