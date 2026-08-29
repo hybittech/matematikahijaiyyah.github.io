@@ -4,7 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hijaiyyah-hom"
-version = "1.0.0"
+# Keep in step with src/hijaiyyah/version.py __version__ and
+# hom-gui/package.json — tests/test_integrity/test_version_consistency.py
+# fails if they drift apart.
+version = "1.2.0"
 description = "Hijaiyyah Operating Machine — Core Computational System"
 readme = "README.md"
 license = {text = "Proprietary"}
