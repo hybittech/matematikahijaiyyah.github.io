@@ -1,4 +1,6 @@
 from hijaiyyah.hisa.opcodes import InstructionWord, OpCode
+
+
 def test_decode():
     raw = (OpCode.CLOAD << 24) | (1 << 20) | 5
     iw = InstructionWord(raw)

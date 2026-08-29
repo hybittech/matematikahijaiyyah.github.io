@@ -1,20 +1,14 @@
 """Tests for HVM — Hybit Virtual Machine (facade)."""
 
-import pytest
 from hijaiyyah.vm import (
     HVM,
-    HybitEngine,
-    GuardSystem,
-    GuardStatus,
-    HCheck,
-    HCheckResult,
-    HybitRegister,
-    VMFlags,
-    ExitCode,
-    NUM_REGISTERS,
     HYBIT_DIM,
+    NUM_REGISTERS,
+    GuardSystem,
+    HCheck,
+    HybitEngine,
+    HybitRegister,
 )
-
 
 # ── Sample hybit vectors (from Master Table) ─────────────────
 

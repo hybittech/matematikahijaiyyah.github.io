@@ -1,14 +1,13 @@
 """Tests for HASM — Hybit Assembler (facade)."""
 
-import pytest
 from hijaiyyah.assembler import (
-    HASMAssembler,
-    AssembleResult,
-    HBCHeader,
+    FLAG_GUARD_STRICT,
+    HBC_HEADER_SIZE,
     HBC_MAGIC,
     HBC_MAGIC_INT,
-    HBC_HEADER_SIZE,
-    FLAG_GUARD_STRICT,
+    AssembleResult,
+    HASMAssembler,
+    HBCHeader,
 )
 
 

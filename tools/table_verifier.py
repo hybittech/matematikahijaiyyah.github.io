@@ -11,8 +11,8 @@ _src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 
-from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 from hijaiyyah.core.guards import guard_check  # noqa: E402
+from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 from hijaiyyah.integrity.injectivity import InjectivityVerifier  # noqa: E402
 
 

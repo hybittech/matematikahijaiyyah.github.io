@@ -1,13 +1,12 @@
 """Tests for Ψ-Compiler and .hgeo format."""
 
-import json
 import pytest
+
 from hijaiyyah.pipeline import (
-    PsiCompiler,
+    ExtractionParams,
     HGeoFile,
     Measurement,
-    CanonicalLock,
-    ExtractionParams,
+    PsiCompiler,
 )
 
 

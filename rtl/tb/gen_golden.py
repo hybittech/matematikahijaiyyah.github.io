@@ -1,10 +1,17 @@
 """Generate HISAB golden values for RTL testbench cross-validation."""
-import sys, os
+import os
+import sys
+
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from src.hijaiyyah.hisab.serialize import serialize_letter, _nibble_pack, _compute_guard_status
-from src.hijaiyyah.core.master_table import MasterTable
+# Imports follow the sys.path bootstrap above, so E402 is expected here.
+from src.hijaiyyah.core.master_table import MasterTable  # noqa: E402
+from src.hijaiyyah.hisab.serialize import (  # noqa: E402
+    _compute_guard_status,
+    _nibble_pack,
+    serialize_letter,
+)
 
 mt = MasterTable()
 entries = mt.all_entries()  # 28 entries in ROM order
@@ -28,21 +35,21 @@ for idx, entry in enumerate(entries):
     print(f"  guard_status=0x{gs:02X}  CRC32=0x{crc:08X}")
     
     if entry.name == 'Ba':
-        print(f"\n  // === Verilog golden constants for Ba ===")
+        print("\n  // === Verilog golden constants for Ba ===")
         print(f"  localparam BA_PACK0 = 32'h{pw0:08X};")
         print(f"  localparam BA_PACK1 = 32'h{pw1:08X};")
         print(f"  localparam BA_PACK2 = 32'h{pw2:08X};")
         print(f"  localparam BA_CRC32 = 32'h{crc:08X};")
     
     if entry.name == 'Alif':
-        print(f"\n  // === Verilog golden constants for Alif ===")
+        print("\n  // === Verilog golden constants for Alif ===")
         print(f"  localparam ALIF_PACK0 = 32'h{pw0:08X};")
         print(f"  localparam ALIF_PACK1 = 32'h{pw1:08X};")
         print(f"  localparam ALIF_PACK2 = 32'h{pw2:08X};")
         print(f"  localparam ALIF_CRC32 = 32'h{crc:08X};")
     
     if entry.name == 'Ya':
-        print(f"\n  // === Verilog golden constants for Ya ===")
+        print("\n  // === Verilog golden constants for Ya ===")
         print(f"  localparam YA_PACK0 = 32'h{pw0:08X};")
         print(f"  localparam YA_PACK1 = 32'h{pw1:08X};")
         print(f"  localparam YA_PACK2 = 32'h{pw2:08X};")

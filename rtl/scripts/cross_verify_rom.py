@@ -30,7 +30,7 @@ def load_golden() -> dict[int, list[int]]:
         data = json.load(f)
     
     vectors = {}
-    for name, entry in data["data"].items():
+    for entry in data["data"].values():
         idx = entry["index"]
         vec = entry["vector"]
         assert len(vec) == 18

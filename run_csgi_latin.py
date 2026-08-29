@@ -10,9 +10,9 @@ on all PNG images in:
 Outputs JSON results to data/csgi_output/
 """
 
+import json
 import os
 import sys
-import json
 
 import numpy as np
 from PIL import Image
@@ -21,8 +21,9 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
-from hijaiyyah.skeleton.skeletonizer import zhang_suen_thinness
-from hijaiyyah.skeleton.contractor import SkeletonContractor
+# Imports follow the sys.path bootstrap above, so E402 is expected here.
+from hijaiyyah.skeleton.contractor import SkeletonContractor  # noqa: E402
+from hijaiyyah.skeleton.skeletonizer import zhang_suen_thinness  # noqa: E402
 
 # ── Letter mappings ──────────────────────────────────────────────
 LOWERCASE = list("abcdefghijklmnopqrstuvwxyz")
@@ -154,7 +155,10 @@ def main():
     print(f"{'Label':<8} {'Category':<12} {'Nodes':>6} {'Edges':>6} {'SkelPx':>8}")
     print("-" * 42)
     for r in all_results:
-        print(f"{r['label']:<8} {r['category']:<12} {r['nodes']:>6} {r['edges']:>6} {r['skeleton_pixels']:>8}")
+        print(
+            f"{r['label']:<8} {r['category']:<12} "
+            f"{r['nodes']:>6} {r['edges']:>6} {r['skeleton_pixels']:>8}"
+        )
 
 
 if __name__ == "__main__":

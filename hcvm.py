@@ -16,9 +16,8 @@ _src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 
+from hijaiyyah.core.guards import compute_U, guard_check  # noqa: E402
 from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
-from hijaiyyah.core.guards import guard_check, compute_U  # noqa: E402
-
 
 # ── Data types ───────────────────────────────────────────────────
 
@@ -190,7 +189,9 @@ class VM:
             ok = guard_check(obj.v)
             self.builtins["emit"]([f"Guard: {'PASS' if ok else 'FAIL'}"])
         else:
-            self.builtins["emit"]([f"VERIFY_CHECKSUM: variable '{var_name}' not found or not a Codex"])
+            self.builtins["emit"](
+                [f"VERIFY_CHECKSUM: variable '{var_name}' not found or not a Codex"]
+            )
 
     def _exec_verify_mod4(self, var_name: str) -> None:
         """Execute VERIFY_MOD4 on a variable."""

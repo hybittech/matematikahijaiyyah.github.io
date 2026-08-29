@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 from dataclasses import dataclass, field
@@ -19,9 +18,8 @@ _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 from hijaiyyah.core.codex_entry import CodexEntry  # noqa: E402
-from hijaiyyah.core.guards import guard_check  # noqa: E402
+from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 
 try:
     import numpy as np

@@ -1,7 +1,8 @@
 """Tests for the HC parser."""
+from hijaiyyah.language.ast_nodes import LetStmt, Literal
 from hijaiyyah.language.lexer import Lexer
 from hijaiyyah.language.parser import Parser
-from hijaiyyah.language.ast_nodes import Program, LetStmt, CallExpr, BinaryExpr, Literal
+
 
 def _parse(src):
     return Parser(Lexer(src).tokenize()).parse()

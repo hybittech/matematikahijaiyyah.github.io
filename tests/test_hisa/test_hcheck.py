@@ -1,7 +1,7 @@
 """Tests for HCHECK runtime integrity monitor — Bab III §3.31."""
 
-from hijaiyyah.hisa.hcheck import HCHECK, CorruptionReport
 from hijaiyyah.core.master_table import MASTER_TABLE
+from hijaiyyah.hisa.hcheck import HCHECK
 
 
 class TestHCHECK:

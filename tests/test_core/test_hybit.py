@@ -1,6 +1,7 @@
 """Tests for the Hybit class — Bab III §3.1–3.9."""
 
 import pytest
+
 from hijaiyyah.core.hybit import Hybit
 from hijaiyyah.core.master_table import MASTER_TABLE
 
@@ -161,7 +162,9 @@ class TestMetrics:
         assert h1 is not None and h2 is not None
         ld = h1.layered_distance(h2)
         assert ld["total_sq"] == h1.distance_squared(h2)
-        assert ld["total_sq"] == ld["delta_theta_sq"] + ld["delta_N_sq"] + ld["delta_K_sq"] + ld["delta_Q_sq"]
+        assert ld["total_sq"] == (
+            ld["delta_theta_sq"] + ld["delta_N_sq"] + ld["delta_K_sq"] + ld["delta_Q_sq"]
+        )
 
 
 class TestExomatrix:

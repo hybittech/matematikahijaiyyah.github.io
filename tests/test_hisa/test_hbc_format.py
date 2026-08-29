@@ -1,9 +1,13 @@
 """Tests for .hbc binary format — Bab III §3.25."""
 
-import struct
 import pytest
+
 from hijaiyyah.hisa.hbc_format import (
-    HbcHeader, HbcFile, HbcFlags, HBC_MAGIC, HBC_HEADER_SIZE,
+    HBC_HEADER_SIZE,
+    HBC_MAGIC,
+    HbcFile,
+    HbcFlags,
+    HbcHeader,
 )
 from hijaiyyah.hisa.opcodes import OpCode
 
