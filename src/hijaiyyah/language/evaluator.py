@@ -218,9 +218,15 @@ def _build_exomatrix(v: List[int]) -> List[List[int]]:
     theta = v[0]
     U = _U(v)
     rho = theta - U
-    AN = v[1] + v[2] + v[3]
-    AK = v[4] + v[5] + v[6] + v[7] + v[8]
-    AQ = v[9] + v[10] + v[11] + v[12] + v[13]
+    # A_N/A_K/A_Q are read from v₁₈, not recomputed from the components they
+    # summarise. Recomputing them makes audit() tautological: R2–R4 compare a
+    # matrix cell against the very sum that produced it, so a vector whose
+    # stored checksum disagrees with its components would still audit clean.
+    # For canonical letters the two are equal — guards G1–G3 enforce that — so
+    # this only changes behaviour on the corrupt input the audit exists to catch.
+    AN = v[14]
+    AK = v[15]
+    AQ = v[16]
 
     return [
         [theta, U, rho, 0, 0],
