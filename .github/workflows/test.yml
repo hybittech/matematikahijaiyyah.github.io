@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,13 +22,45 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # test_js_engine_parity.py runs hom-gui/src/engine under node and diffs
+      # it against the Python implementation. Without node those tests skip,
+      # so the runner needs it for the parity gate to mean anything.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Run tests with Coverage
+        # HOM_REQUIRE_NODE turns a missing node into a failure instead of a
+        # silent skip — a skipped parity test would look green while pinning
+        # nothing.
+        env:
+          HOM_REQUIRE_NODE: "1"
         run: pytest --cov=src/hijaiyyah --cov-report=xml --tb=short -q
 
+      # The whole repo, not just src/ — tests/, tools/, rtl/scripts/ and the
+      # root scripts were unlinted while `ruff check src/` stayed green.
       - name: Lint
-        run: ruff check src/
+        run: ruff check .
+
+  rtl:
+    name: HCPU RTL simulation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      # Each testbench ends in $fatal on a non-zero fail_count, so a broken
+      # design exits non-zero and fails this job.
+      - name: Run HCPU testbenches
+        run: make -C rtl/tb all
