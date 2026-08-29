@@ -262,12 +262,13 @@ module tb_hisab;
         $display("HISAB Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");
 
-        if (fail_count == 0)
+        if (fail_count == 0) begin
             $display("=== ALL HISAB TESTS PASSED ===");
-        else
-            $display("*** %0d HISAB TESTS FAILED ***", fail_count);
-
-        $finish;
+            $finish(0);
+        end else begin
+            // $fatal exits non-zero so a failing run reaches the shell and CI.
+            $fatal(1, "*** %0d HISAB TESTS FAILED ***", fail_count);
+        end
     end
 
 endmodule

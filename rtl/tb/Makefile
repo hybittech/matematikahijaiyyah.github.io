@@ -3,7 +3,8 @@
 # (c) 2026 HMCL
 # ============================================================================
 
-IVERILOG  = iverilog
+# -g2012 enables $fatal, which is how a failing testbench exits non-zero.
+IVERILOG  = iverilog -g2012
 VVP       = vvp
 GTKWAVE   = gtkwave
 

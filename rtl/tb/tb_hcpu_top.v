@@ -349,8 +349,10 @@ module tb_hcpu_top;
         $display("\n=============================");
         $display("Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");
+        // $fatal exits non-zero so a failing run reaches the shell and CI.
+        if (fail_count > 0) $fatal(1, "*** %0d INTEGRATION TESTS FAILED ***", fail_count);
         $display("=== All integration tests complete ===");
-        $finish;
+        $finish(0);
     end
 
 endmodule
