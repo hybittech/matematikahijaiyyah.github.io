@@ -50,3 +50,16 @@ rtl/mpw/hcpu_synth_netlist.v
 # Repo ini publik (GitHub Pages di hybit.tech), jadi isi folder ini sengaja
 # ditahan di lokal. Cadangkan sendiri; git tidak menyimpannya.
 Matematika Hijaiyyah/
+
+# Coverage report emitted by the CI pytest invocation
+coverage.xml
+
+# Verilator lint output (regenerate with: python rtl/scripts/lint_hcpu.py)
+rtl/lint_report_*.txt
+
+# Vite dependency-optimisation cache
+hom-gui/.vite/
+
+# Vendored upstream three.js. hom-gui installs `three` from npm instead
+# (see hom-gui/package.json), so this local copy is not part of the build.
+three.js-master/
