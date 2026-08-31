@@ -5,14 +5,13 @@
 // produce and must decide, cheaply, whether each one is structurally sound.
 // Validation is a fixed number of integer operations per unit — no table
 // lookup, no stored checksum, no allocation.
-//
-// Two notes on style, both current limits of the language rather than
-// choices: HC has no assignment statement yet, so a loop cannot carry a
-// running total — checks are written as assertions inside the loop instead
-// of a counter compared afterwards. And an argument list cannot span
-// lines, so calls are kept on one line however long they run.
 
 println("=== Sweeping all 28 letters ===");
+
+// `let` binds immutably; a counter has to be declared `let mut`.
+let mut passed = 0;
+let mut rejected = 0;
+let mut total_theta = 0;
 
 for i in 0..28 {
     let h = load_id(i);
@@ -20,13 +19,20 @@ for i in 0..28 {
     // Every canonical letter passes every guard. A rejection here would mean
     // the reading is not a canonical letter — corruption, not a false alarm.
     if h.guard() {
-        println("  index", i, "accepted");
+        passed = passed + 1;
     } else {
-        println("  index", i, "REJECTED");
+        rejected = rejected + 1;
+        println("  REJECTED at index", i);
     }
 
-    assert(h.guard(), "a canonical letter failed its guards");
+    total_theta = total_theta + h.theta();
 }
+
+println("Accepted:", passed, "| Rejected:", rejected);
+println("Total turning across the alphabet:", total_theta);
+
+assert(rejected == 0, "a canonical letter failed its guards");
+assert(passed == 28, "expected all 28 letters to pass");
 
 println("=== Localising a fault, not merely detecting one ===");
 
@@ -36,7 +42,10 @@ println("=== Localising a fault, not merely detecting one ===");
 // only report that something changed, never which layer.
 for i in 0..6 {
     let h = load_id(i);
-    println("  index", i, "| theta", h.theta(), "| rho", h.rho(), "| norm2", h.norm2());
+    println("  index", i,
+            "| theta", h.theta(),
+            "| rho", h.rho(),
+            "| norm2", h.norm2());
     assert(h.rho() >= 0, "G4 violated: negative rho");
 }
 
