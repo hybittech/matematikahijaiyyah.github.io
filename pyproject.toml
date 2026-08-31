@@ -36,6 +36,7 @@ dependencies = [
 ]
 
 [project.scripts]
+hc = "hijaiyyah.cli:main"
 hom = "hijaiyyah.__main__:main"
 hybit-ai = "hijaiyyah.ai.__main__:main"
 
