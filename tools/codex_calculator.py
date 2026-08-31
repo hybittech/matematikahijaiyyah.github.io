@@ -13,6 +13,7 @@ if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 
 from hijaiyyah.algebra.aggregametric import string_integral  # noqa: E402
+from hijaiyyah.core.guards import compute_U  # noqa: E402
 
 
 def main() -> None:
@@ -30,7 +31,7 @@ def main() -> None:
 
     # Show turning decomposition
     v = result["cod18"]
-    U = v[10] + v[11] + v[12] + 4 * v[13]
+    U = compute_U(v)
     rho = v[0] - U
     print(f"Θ̂={v[0]}  U={U}  ρ={rho}  (Θ̂=U+ρ: {v[0]==U+rho})")
 

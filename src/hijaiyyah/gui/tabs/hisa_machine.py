@@ -16,6 +16,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Dict, Optional
 
+from ...core.guards import compute_U
 from ...core.master_table import MASTER_TABLE
 from ...hisa.assembler import assemble
 from ...hisa.machine import HISAMachine
@@ -478,7 +479,7 @@ class HISAMachineTab:
 
                 # Show decomposition
                 if h[0] > 0 or any(x > 0 for x in h):
-                    U = h[10] + h[11] + h[12] + 4 * h[13]
+                    U = compute_U(h)
                     rho = h[0] - U
                     self._reg_out.writeln(
                         f"    Θ̂={h[0]} U={U} ρ={rho} (mod4={h[0] % 4})",

@@ -29,7 +29,7 @@ from hijaiyyah.assembler import HBC_MAGIC_INT, HBCHeader
 # core.guards exports guard_check, full_guard_check and guard_detail — there
 # has never been a check_guards or a GuardResult. The guarded import failed
 # silently, so GuardSystem fell back to its own copy of G1-G4 and T1-T2.
-from hijaiyyah.core.guards import full_guard_check
+from hijaiyyah.core.guards import compute_U, full_guard_check
 from hijaiyyah.core.master_table import MASTER_TABLE
 
 # ── Re-export existing implementations ────────────────────────
@@ -195,7 +195,7 @@ class HybitEngine:
     def decompose(self, v: List[int]) -> Tuple[int, int]:
         """HDCMP: decompose into (U, ρ)."""
         theta = v[0]
-        U = v[10] + v[11] + v[12] + 4 * v[13]
+        U = compute_U(v)
         rho = theta - U
         return U, rho
 

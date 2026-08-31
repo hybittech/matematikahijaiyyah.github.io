@@ -489,7 +489,7 @@ class StringIntegralTab:
                 letter_label = (
                     hijaiyyah_chars[k - 1] if k > 0 and k <= len(hijaiyyah_chars) else "—"
                 )
-                U_k = sk[10] + sk[11] + sk[12] + 4 * sk[13]
+                U_k = compute_U(sk)
                 rho_k = sk[0] - U_k
 
                 w.writeln(

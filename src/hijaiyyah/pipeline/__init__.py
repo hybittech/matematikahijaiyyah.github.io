@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional
 # guarded against nothing, and assigning None to a class name is what mypy
 # was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
 # every remaining guarded import honest.
+from hijaiyyah.core.guards import compute_U
 from hijaiyyah.core.master_table import MASTER_TABLE
 
 # hijaiyyah.core.codex has never existed; nothing here used the import.
@@ -238,7 +239,7 @@ class PsiCompiler:
             m.A_K = v[15]
             m.A_Q = v[16]
             m.H_star = v[17]
-            m.U = v[10] + v[11] + v[12] + 4 * v[13]
+            m.U = compute_U(v)
             m.rho = m.theta_hat - m.U
         return m
 
@@ -252,8 +253,8 @@ class PsiCompiler:
             A_K=v18[15],
             A_Q=v18[16],
             H_star=v18[17],
-            U=v18[10] + v18[11] + v18[12] + 4 * v18[13],
-            rho=v18[0] - (v18[10] + v18[11] + v18[12] + 4 * v18[13]),
+            U=compute_U(v18),
+            rho=v18[0] - compute_U(v18),
         )
 
     def _run_guards(self, v18: List[int]) -> Dict[str, str]:

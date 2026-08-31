@@ -19,6 +19,7 @@ import math
 from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 from hijaiyyah.core.exceptions import EBNFSemanticError
+from hijaiyyah.core.guards import compute_U
 from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
 from hijaiyyah.language.ast_nodes import (
     ArrayLiteral,
@@ -64,8 +65,15 @@ def _v14(obj: Any) -> List[int]:
 
 
 def _U(vec: List[int]) -> int:
-    """U(h) = Qx + Qs + Qa + 4·Qc  (Definition 11.1.1)."""
-    return vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    """
+    U(h) = Qx + Qs + Qa + 4·Qc  (Definition 11.1.1).
+
+    Forwards to core.guards rather than restating the formula. That one
+    expression had 31 hand-written copies across 16 files, and every
+    divergence this project has had came from a truth kept in more than
+    one place.
+    """
+    return compute_U(vec)
 
 
 def _rho(vec: List[int]) -> int:
@@ -188,7 +196,7 @@ def _guard_detail(vec: List[int]) -> Dict[str, Any]:
     R4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
 
     # R5: U = Qx + Qs + Qa + 4·Qc
-    R5 = U == vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    R5 = U == _U(vec)
 
     return {
         "R1": R1,
