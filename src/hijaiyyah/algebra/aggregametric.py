@@ -76,7 +76,8 @@ def centroid(text: str) -> List[float]:
 
 def cumulative(text: str) -> List[List[int]]:
     """Cumulative trajectory S₀, S₁, …, Sₙ  (Def 27.2.1)."""
-    return string_integral(text)["trajectory"]
+    trajectory: List[List[int]] = string_integral(text)["trajectory"]
+    return trajectory
 
 
 def energy_integral(text: str) -> int:

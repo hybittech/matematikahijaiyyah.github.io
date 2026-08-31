@@ -33,23 +33,57 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 
-# try:
-#     from a.b import C [as D]
-# except ImportError:
-_GUARDED = re.compile(
-    r"try:\s*\n\s*from ([\w.]+) import (\w+)(?:\s+as\s+\w+)?\s*\n\s*except ImportError",
-    re.M,
-)
+# A guarded block, up to the matching `except ImportError`. Captured whole so
+# that every `from ... import ...` inside it is examined — the first version of
+# this scan matched a single line and so walked straight past
+#
+#     try:
+#         from a.b import (
+#             C as _C,
+#         )
+#         from a.b import (
+#             D as _D,
+#         )
+#     except ImportError:
+#
+# which is exactly the shape two live failures were hiding in.
+_GUARDED_BLOCK = re.compile(r"try:\n(.*?)\n\s*except ImportError", re.S)
+_FROM_IMPORT = re.compile(r"from ([\w.]+) import\s*\(?\s*([\w,\s]+?)\)?\s*$", re.M)
+
+
+def _absolute(module: str, path: Path) -> str:
+    """Resolve a relative import against the package the file sits in."""
+    if not module.startswith("."):
+        return module
+    depth = len(module) - len(module.lstrip("."))
+    package = path.relative_to(SRC).with_suffix("").parts
+    if path.name == "__init__.py":
+        package = package[:-1]
+    anchor = package[: len(package) - depth]
+    return ".".join([*anchor, module.lstrip(".")]).rstrip(".")
 
 
 def _guarded_imports() -> List[Tuple[str, str, str]]:
+    """
+    First-party guarded imports only.
+
+    A try/except around an optional third-party dependency — PIL, scipy — is
+    the construct working as intended: the feature degrades when the package
+    is absent. A guard around one of this project's own modules is different,
+    because that module either exists or was never written.
+    """
     found: List[Tuple[str, str, str]] = []
     for path in sorted(SRC.rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
-        for match in _GUARDED.finditer(text):
-            found.append(
-                (str(path.relative_to(ROOT)), match.group(1), match.group(2))
-            )
+        rel = str(path.relative_to(ROOT))
+        for block in _GUARDED_BLOCK.finditer(path.read_text(encoding="utf-8")):
+            for imp in _FROM_IMPORT.finditer(block.group(1)):
+                module = _absolute(imp.group(1), path)
+                if not module.startswith("hijaiyyah"):
+                    continue
+                for piece in imp.group(2).split(","):
+                    name = piece.strip().split(" as ")[0].strip()
+                    if name:
+                        found.append((rel, module, name))
     return found
 
 

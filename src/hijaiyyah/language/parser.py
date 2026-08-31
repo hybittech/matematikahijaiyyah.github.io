@@ -87,18 +87,6 @@ class Parser:
     def _at(self, *types: TokenType) -> bool:
         return self._current().type in types
 
-    def _skip_newlines(self) -> None:
-        """
-        Consume line breaks inside a bracketed construct.
-
-        The lexer emits NEWLINE, and the parser only steps over it at statement
-        boundaries — so inside brackets a line break was a hard stop and an
-        argument list could not span lines. Within (), [] and a call's
-        arguments a newline carries no meaning, so it is skipped here.
-        """
-        while self._at(TokenType.NEWLINE):
-            self._advance()
-
     def _peek_is(self, offset: int, ttype: TokenType) -> bool:
         """True if the token `offset` positions ahead has this type."""
         pos = self._pos + offset
@@ -135,6 +123,14 @@ class Parser:
         raise ParseError(msg, tok)
 
     def _skip_newlines(self) -> None:
+        """
+        Consume line breaks.
+
+        The lexer emits NEWLINE and the parser steps over it at statement
+        boundaries. Inside brackets a newline carries no meaning either, so the
+        argument-list, array-literal and grouping paths call this too — without
+        those calls a line break inside () or [] ended the expression.
+        """
         while self._at(TokenType.NEWLINE):
             self._advance()
 
@@ -307,7 +303,8 @@ class Parser:
         condition = self._parse_expression()
         then_branch = self._parse_block()
 
-        else_branch = None
+        # `else if` yields another IfExpr; a bare `else` yields a Block.
+        else_branch: Optional[ASTNode] = None
         self._skip_newlines()
         if self._match(TokenType.KW_ELSE):
             self._skip_newlines()
@@ -340,6 +337,8 @@ class Parser:
         self._expect(TokenType.FAT_ARROW, "Expected '=>' in match arm")
         self._skip_newlines()
 
+        # A match arm takes either a block or a bare expression.
+        body: ASTNode
         if self._at(TokenType.LBRACE):
             body = self._parse_block()
         else:

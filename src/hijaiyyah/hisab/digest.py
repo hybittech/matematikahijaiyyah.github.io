@@ -37,4 +37,4 @@ def verify_digest(frame_bytes: bytes) -> bool:
         return False
     data = frame_bytes[:-4]
     stored = struct.unpack("<I", frame_bytes[-4:])[0]
-    return compute_digest(data) == stored
+    return bool(compute_digest(data) == stored)

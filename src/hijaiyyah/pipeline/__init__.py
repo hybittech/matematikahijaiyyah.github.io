@@ -21,11 +21,11 @@ from typing import Any, Dict, List, Optional
 # skeleton.csgi defines CSGIGraph, CSGINode and CSGIEdge — never a
 # CSGIProcessor. The Master Table fallback below is what actually populates a
 # measurement, and it works.
-
-try:
-    from hijaiyyah.core.master_table import MASTER_TABLE
-except ImportError:
-    MASTER_TABLE = None
+# First-party and always importable — the try/except that used to wrap this
+# guarded against nothing, and assigning None to a class name is what mypy
+# was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
+# every remaining guarded import honest.
+from hijaiyyah.core.master_table import MASTER_TABLE
 
 # hijaiyyah.core.codex has never existed; nothing here used the import.
 

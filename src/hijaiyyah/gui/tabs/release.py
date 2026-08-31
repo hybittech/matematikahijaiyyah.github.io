@@ -435,11 +435,13 @@ class ReleaseTab:
             tag = "pass" if ok else "fail"
             status = "PASS ✓" if ok else "FAIL ✗"
             dots = "." * max(1, 40 - len(name))
-            self._out.writeln(
+            out = self._out
+            assert out is not None, "_out is created before any check runs"
+            out.writeln(
                 f"  [{checks_total:02d}] {name} {dots} {status}  ({elapsed:.0f}ms)", tag
             )
             if detail:
-                self._out.writeln(f"       {detail}", "dim" if ok else "fail")
+                out.writeln(f"       {detail}", "dim" if ok else "fail")
 
         # ── Layer 1: File Integrity
         self._out.writeln("  LAYER 1: FILE INTEGRITY", "section")

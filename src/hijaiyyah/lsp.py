@@ -79,7 +79,8 @@ class Server:
                 length = int(line.split(":", 1)[1].strip())
         if length <= 0:
             return None
-        return json.loads(self._in.read(length))
+        message: Dict[str, Any] = json.loads(self._in.read(length))
+        return message
 
     def _send(self, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload)

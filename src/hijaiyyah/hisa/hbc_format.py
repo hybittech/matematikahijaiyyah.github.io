@@ -112,7 +112,9 @@ class HbcHeader:
 
         fields = struct.unpack(cls._BODY_FMT, header_data)
         if fields[0] != HBC_MAGIC:
-            raise ValueError(f"Invalid magic: {fields[0]}, expected {HBC_MAGIC}")
+            raise ValueError(
+                f"Invalid magic: {fields[0]!r}, expected {HBC_MAGIC!r}"
+            )
 
         return cls(
             magic=fields[0],

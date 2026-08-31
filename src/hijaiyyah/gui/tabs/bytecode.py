@@ -469,26 +469,29 @@ class BytecodeTab:
         ttk.Label(letter_frame, text="Quick letter (for CLOAD IMM):").pack(side=tk.LEFT)
 
         entries = MASTER_TABLE.all_entries()
-        for i, entry in enumerate(entries):
+        # `letter`, not `entry` — a tk.Entry is bound to that name above.
+        # IMM is the 1-based letter index the ROM and HLOAD use, so the button
+        # passes letter.index rather than its position in the list.
+        for i, letter in enumerate(entries):
             if i >= 14:
                 break
             ttk.Button(
                 letter_frame,
-                text=entry.char,
+                text=letter.char,
                 width=2,
-                command=lambda idx=i: self._set_imm_letter(idx),
+                command=lambda idx=letter.index: self._set_imm_letter(idx),
             ).pack(side=tk.LEFT, padx=1)
 
         letter_frame2 = ttk.Frame(parent)
         letter_frame2.pack(fill=tk.X, padx=10, pady=(0, 5))
-        for i, entry in enumerate(entries):
+        for i, letter in enumerate(entries):
             if i < 14:
                 continue
             ttk.Button(
                 letter_frame2,
-                text=entry.char,
+                text=letter.char,
                 width=2,
-                command=lambda idx=i: self._set_imm_letter(idx),
+                command=lambda idx=letter.index: self._set_imm_letter(idx),
             ).pack(side=tk.LEFT, padx=1)
 
         # Result
@@ -540,7 +543,13 @@ class BytecodeTab:
         self._update_builder()
 
     def _set_imm_letter(self, idx: int) -> None:
-        """Set IMM to a letter index and switch opcode to CLOAD."""
+        """
+        Set IMM to a 1-based letter index and switch the opcode to CLOAD.
+
+        The buttons used to pass their position in the list, which is 0-based:
+        pressing ب produced CLOAD #1 and loaded Alif, and pressing ا produced
+        CLOAD #0, an address the ROM reports as invalid.
+        """
         self._build_op_var.set("CLOAD")
         self._build_imm_var.set(str(idx))
         self._update_builder()

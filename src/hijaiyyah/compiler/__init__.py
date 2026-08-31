@@ -24,16 +24,12 @@ from enum import Enum, auto
 from typing import Any, ClassVar, Dict, List, Optional
 
 # ── Re-export from language/ ──────────────────────────────────
-
-try:
-    from hijaiyyah.language.lexer import Lexer as HCLexer
-except ImportError:
-    HCLexer = None
-
-try:
-    from hijaiyyah.language.parser import Parser as HCParser
-except ImportError:
-    HCParser = None
+# First-party and always importable — the try/except that used to wrap this
+# guarded against nothing, and assigning None to a class name is what mypy
+# was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
+# every remaining guarded import honest.
+from hijaiyyah.language.lexer import Lexer as HCLexer
+from hijaiyyah.language.parser import Parser as HCParser
 
 # ── Re-export from hisa/compiler ──────────────────────────────
 

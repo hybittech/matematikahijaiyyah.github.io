@@ -56,6 +56,12 @@ jobs:
       - name: Lint
         run: ruff check .
 
+      # mypy was configured in pyproject but never wired in, and could not have
+      # run if it had been: python_version = "3.11" made it reject numpy's own
+      # stubs before reaching this project. It found 44 errors once unblocked.
+      - name: Type check
+        run: mypy src/hijaiyyah
+
   rtl:
     name: HCPU RTL simulation
     runs-on: ubuntu-latest
