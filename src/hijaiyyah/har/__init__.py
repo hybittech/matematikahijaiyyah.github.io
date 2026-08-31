@@ -28,10 +28,9 @@ try:
 except ImportError:
     _MT = None
 
-try:
-    from hijaiyyah.core.codex import Codex as _Codex
-except ImportError:
-    _Codex = None
+# hijaiyyah.core.codex has never existed — the module is core.codex_entry and
+# the class is CodexEntry. Nothing here referenced the import beyond its own
+# fallback, so it is removed rather than repointed.
 
 
 class HARStatus(Enum):

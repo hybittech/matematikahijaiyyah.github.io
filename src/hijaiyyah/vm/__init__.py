@@ -26,10 +26,11 @@ try:
 except ImportError:
     _Machine = None
 
-try:
-    from hijaiyyah.hisa.hcheck import HCheck as _HCheck
-except ImportError:
-    _HCheck = None
+# hisa.hcheck exports HCHECK, not HCheck, and its scan() takes raw v18
+# vectors where this class works in HybitRegister objects. The delegation
+# below asked for a .check() method that HCHECK does not have, so it could
+# never have fired even with the name spelled correctly. The implementation
+# in this file is the one that runs.
 
 try:
     from hijaiyyah.core.guards import (
@@ -178,17 +179,10 @@ class HCheck:
 
     def __init__(self):
         self._guard = GuardSystem()
-        self._base = _HCheck() if _HCheck else None
 
     def scan(self, registers: List[HybitRegister],
              stack: Optional[List] = None) -> HCheckResult:
         """Scan all registers and stack for corruption."""
-        if self._base and hasattr(self._base, 'check'):
-            try:
-                return self._base.check(registers)
-            except Exception:
-                pass
-
         failures = []
         for i, reg in enumerate(registers):
             if reg.has_hybit:

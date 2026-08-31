@@ -19,10 +19,9 @@ import zlib
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-try:
-    from hijaiyyah.hisa.assembler import Assembler as _BaseAssembler
-except ImportError:
-    _BaseAssembler = None
+# hisa.assembler exports assemble() and assemble_line() as functions; there
+# has never been an Assembler class to delegate to. The two-pass assembler in
+# this file — label resolution, encoding, constant pool — is the one that runs.
 
 # ── Constants ─────────────────────────────────────────────────
 
@@ -151,12 +150,6 @@ class HASMAssembler:
     def __init__(self, har_id: int = 0x0001, flags: int = 0):
         self.har_id = har_id
         self.flags = flags
-        self._base: object | None = None
-        if _BaseAssembler is not None:
-            try:
-                self._base = _BaseAssembler()
-            except Exception:
-                pass
 
     def assemble(self, asm_text: str) -> AssembleResult:
         """Assemble H-ISA text to .hbc bytecode."""
@@ -168,7 +161,8 @@ class HASMAssembler:
 
             # Pass 2: Instruction encoding
             code = self._encode_instructions(asm_text, labels)
-            result.instruction_count = len(code) if code else 0
+            # Each instruction is a 32-bit word; len(code) is bytes.
+            result.instruction_count = len(code) // 4 if code else 0
 
             # Pass 3: Constant pool
             const_pool = self._build_constant_pool(asm_text)
@@ -210,20 +204,19 @@ class HASMAssembler:
 
     def _encode_instructions(self, text: str,
                              labels: Dict[str, int]) -> bytes:
-        if self._base and hasattr(self._base, 'assemble'):
-            try:
-                return self._base.assemble(text)
-            except Exception:
-                pass
-        # Minimal encoding: instruction count as placeholder
-        count = sum(
-            1 for line in text.splitlines()
-            if line.strip()
-            and not line.strip().startswith(";")
-            and not line.strip().startswith(".")
-            and not line.strip().endswith(":")
-        )
-        return bytes(count)
+        """
+        Encode each instruction as a big-endian 32-bit word.
+
+        This used to emit `bytes(count)` — a run of NUL bytes as long as the
+        instruction count — behind a delegation to an Assembler class that has
+        never existed, so the .hbc it produced carried no instructions at all.
+        hisa.assembler.assemble() does the real encoding against the frozen
+        H-ISA, and is what runs now.
+        """
+        from ..hisa.assembler import assemble
+
+        words = assemble(text)
+        return b"".join(word.to_bytes(4, "big") for word in words)
 
     def _build_constant_pool(self, text: str) -> bytes:
         return b""

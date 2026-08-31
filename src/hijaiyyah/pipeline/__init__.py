@@ -18,20 +18,16 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-try:
-    from hijaiyyah.skeleton.csgi import CSGIProcessor as _CSGI
-except ImportError:
-    _CSGI = None
+# skeleton.csgi defines CSGIGraph, CSGINode and CSGIEdge — never a
+# CSGIProcessor. The Master Table fallback below is what actually populates a
+# measurement, and it works.
 
 try:
     from hijaiyyah.core.master_table import MASTER_TABLE
 except ImportError:
     MASTER_TABLE = None
 
-try:
-    from hijaiyyah.core.codex import Codex as _Codex
-except ImportError:
-    _Codex = None
+# hijaiyyah.core.codex has never existed; nothing here used the import.
 
 
 # ── .hgeo Data Model ─────────────────────────────────────────
@@ -205,7 +201,6 @@ class PsiCompiler:
                  params: Optional[ExtractionParams] = None):
         self.font_path = font_path
         self.params = params or ExtractionParams()
-        self._csgi = _CSGI() if _CSGI else None
 
     def extract_glyph(self, letter: str) -> HGeoFile:
         """Extract geometry for a single glyph."""
@@ -215,17 +210,8 @@ class PsiCompiler:
             extraction_params=self.params,
         )
 
-        # Try CSGI pipeline if available
-        if self._csgi and hasattr(self._csgi, 'process'):
-            try:
-                result = self._csgi.process(letter)
-                if result:
-                    # Map CSGI output → .hgeo
-                    hgeo.measurement = self._map_csgi(result)
-            except Exception:
-                pass
-
-        # Fallback: use Master Table if available
+        # Measurement comes from the Master Table. A CSGi path was sketched
+        # here but never had a processor to call.
         if all(x == 0 for x in hgeo.v18) and MASTER_TABLE:
             entry = MASTER_TABLE.get_by_char(letter)
             if entry and hasattr(entry, 'vector'):

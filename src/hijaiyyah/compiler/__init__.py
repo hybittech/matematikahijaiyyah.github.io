@@ -37,15 +37,14 @@ except ImportError:
 
 # ── Re-export from hisa/compiler ──────────────────────────────
 
-try:
-    from hijaiyyah.hisa.compiler import HISACompiler as _HISACompiler
-except ImportError:
-    _HISACompiler = None
-
-try:
-    from hijaiyyah.hisa.assembler import Assembler as _Assembler
-except ImportError:
-    _Assembler = None
+# hisa.compiler holds HL18ECompiler, itself a placeholder whose compile()
+# returns []; there has never been a HISACompiler to delegate to, and wiring
+# the one that exists would gain nothing. Code generation is genuinely not
+# implemented, and compile_source now says so instead of reporting success
+# over an empty result.
+#
+# hisa.assembler exports assemble() as a function rather than a class, and
+# _assemble below calls it directly.
 
 
 # ── Public types ──────────────────────────────────────────────
@@ -105,17 +104,6 @@ class HCCompiler:
         self.options = options or CompileOptions()
         self._lexer_cls = HCLexer
         self._parser_cls = HCParser
-        self._hisa_compiler = self._try_init(_HISACompiler)
-        self._assembler = self._try_init(_Assembler)
-
-    @staticmethod
-    def _try_init(cls):
-        if cls is None:
-            return None
-        try:
-            return cls()
-        except Exception:
-            return None
 
     # ── Public API ────────────────────────────────────────
 
@@ -145,6 +133,18 @@ class HCCompiler:
             asm_text = self._codegen(typed_ast)
             result.stages_completed.append(CompileStage.CODEGEN)
 
+            # Code generation is not implemented, so this is where the pipeline
+            # actually stops. Reporting success over an empty result told
+            # callers the source had compiled when nothing had been produced.
+            if not asm_text.strip():
+                result.success = False
+                result.errors.append(
+                    "code generation is not implemented — the front end "
+                    "(lexer, parser) runs, but no H-ISA assembly is emitted. "
+                    "Use hijaiyyah.assembler to assemble .hasm directly."
+                )
+                return result
+
             if self.options.emit_asm:
                 result.output_format = "hasm"
                 return result
@@ -153,9 +153,8 @@ class HCCompiler:
             bytecode = self._assemble(asm_text)
             result.stages_completed.append(CompileStage.ASSEMBLE)
             result.output_format = "hbc"
-            result.instruction_count = (
-                len(bytecode) if bytecode else 0
-            )
+            # Each instruction is a 32-bit word; len(bytecode) is bytes.
+            result.instruction_count = len(bytecode) // 4 if bytecode else 0
 
         except Exception as e:
             result.success = False
@@ -185,10 +184,12 @@ class HCCompiler:
         return {
             "lexer": self._lexer_cls is not None,
             "parser": self._parser_cls is not None,
-            "semantic": self._hisa_compiler is not None,
+            # Semantic analysis is a pass-through and code generation is not
+            # implemented; only the assembler is real.
+            "semantic": False,
             "psi_inject": self.options.psi_mode,
-            "codegen": self._hisa_compiler is not None,
-            "assembler": self._assembler is not None,
+            "codegen": False,
+            "assembler": True,
         }
 
     # ── Internal stages ───────────────────────────────────
@@ -206,10 +207,8 @@ class HCCompiler:
         return self._parser_cls(tokens).parse()
 
     def _analyze(self, ast):
-        """Semantic analysis — type checking, scope resolution."""
-        if self._hisa_compiler and hasattr(self._hisa_compiler, 'analyze'):
-            return self._hisa_compiler.analyze(ast)
-        return ast  # pass-through if not available
+        """Semantic analysis — not implemented; the AST passes through."""
+        return ast
 
     def _psi_inject(self, ast):
         """Ψ-Injection: attach hybit metadata to tokens."""
@@ -217,16 +216,21 @@ class HCCompiler:
         return ast
 
     def _codegen(self, ast):
-        """Generate H-ISA assembly from AST."""
-        if self._hisa_compiler and hasattr(self._hisa_compiler, 'generate'):
-            return self._hisa_compiler.generate(ast)
+        """
+        Generate H-ISA assembly from the AST.
+
+        Not implemented. It returns nothing rather than pretending, and
+        compile_source refuses to report success on an empty result.
+        """
         return ""
 
-    def _assemble(self, asm_text: str):
-        """Assemble H-ISA text → binary bytecode."""
-        if self._assembler and hasattr(self._assembler, 'assemble'):
-            return self._assembler.assemble(asm_text)
-        return b""
+    def _assemble(self, asm_text: str) -> bytes:
+        """Assemble H-ISA text into bytecode, one 32-bit word per instruction."""
+        if not asm_text.strip():
+            return b""
+        from ..hisa.assembler import assemble
+
+        return b"".join(word.to_bytes(4, "big") for word in assemble(asm_text))
 
 
 # ── Module-level convenience ──────────────────────────────────
