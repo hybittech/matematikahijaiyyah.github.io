@@ -8,19 +8,19 @@
 
 Bab I membangun fondasi: setiap huruf $h \in \mathcal{H}_{28}$ dipetakan ke vektor integer $v_{18}(h) \in \mathbb{N}_0^{18}$ melalui prosedur deterministik yang lulus 658 pemeriksaan tanpa pengecualian. Bab II membuktikan bahwa codex ini operabel: lima bidang analisis menghasilkan 683 pemeriksaan tambahan, semuanya PASS.
 
-Bab III menjawab tiga pertanyaan fundamental yang menentukan apakah hasil Bab I–II memiliki signifikansi **melampaui matematika murni** — yaitu, apakah codex huruf Hijaiyyah melahirkan paradigma komputasi yang secara formal berbeda dari paradigma yang sudah ada. Lebih jauh, Bab ini membuktikan bahwa paradigma ini bukan sekadar teori, melainkan telah direalisasikan hingga level Register-Transfer Level (RTL) pada silikon melalui arsitektur HCPU (Hijaiyyah Core Processing Unit).
+Bab III menjawab tiga pertanyaan fundamental yang menentukan apakah hasil Bab I–II memiliki signifikansi **melampaui matematika murni** — yaitu, apakah codex huruf Hijaiyyah melahirkan paradigma komputasi yang secara formal berbeda dari paradigma yang sudah ada. Lebih jauh, Bab ini membuktikan bahwa paradigma ini bukan sekadar teori, melainkan telah direalisasikan hingga level Register-Transfer Level (RTL) yang dapat disintesis dan disimulasi, melalui arsitektur HCPU (Hijaiyyah Core Processing Unit).
 
 | ID | Pertanyaan | Jawaban Ringkas | Bukti |
 |---|---|---|---|
 | **Q1** | Apakah unit informasi hybit secara aljabar berbeda dari bit dan qubit? | **Ya** — tiga struktur aljabar berbeda | Teorema di §2.7–2.9 |
 | **Q2** | Apakah perbedaan ini menghasilkan keuntungan terukur? | **Ya** — validasi O(1) intrinsik, diagnostik per-lapisan | §3.1–3.3 |
-| **Q3** | Apakah paradigma ini dapat direalisasikan sebagai technology stack? | **Ya** — pipeline dari source code hingga silikon (HCPU) terspesifikasi dan operasional | §5.1–13.4 |
+| **Q3** | Apakah paradigma ini dapat direalisasikan sebagai technology stack? | **Ya, hingga RTL** — pipeline dari source code sampai desain RTL tersintesis dan tersimulasi; fabrikasi silikon belum dilakukan | §5.1–13.4 |
 
 ### Lima Prinsip Pemandu Bab III
 
 **Prinsip III-1 (Fondasi dari Bab I–II).** Setiap klaim Bab III dibangun di atas hasil yang telah diverifikasi di Bab I (658 PASS) dan Bab II (683 PASS). Tidak ada aksioma baru.
 
-**Prinsip III-2 (Pemisahan Teori dan Rekayasa).** Setiap klaim diberi label epistemik: VF (kebenaran matematis), CC (terverifikasi data), EH (kelayakan rekayasa), AT (target aspirasional), dan RTL (Realisasi Silikon/Hardware).
+**Prinsip III-2 (Pemisahan Teori dan Rekayasa).** Setiap klaim diberi label epistemik: VF (kebenaran matematis), CC (terverifikasi data), EH (kelayakan rekayasa), AT (target aspirasional), dan RTL (desain register-transfer level yang tersintesis dan tersimulasi). Label RTL **tidak** menyatakan silikon terfabrikasi; klaim luas die dan kesiapan MPW ditahan sampai sintesis dijalankan terhadap PDK sungguhan.
 
 **Prinsip III-3 (Perbandingan Adil).** Perbandingan bit/qubit/hybit dilakukan pada level **struktur aljabar formal**, bukan sekadar implementasi atau kematangan industri.
 
@@ -117,7 +117,9 @@ Ketiga paradigma komputasi ini saling tak tereduksi (mutually irreducible). Peme
 | **Simulasi kuantum** | **Qubit** | Bit: $O(2^n)$ eksponensial; Hybit: tidak mungkin |
 | **Data terstruktur + audit** | **Hybit** | Bit: O(n) tanpa semantik; Qubit: destruktif |
 
-Keuntungan nyata dari Hybit dalam domain auditabilitas mencakup (1) Validasi O(1) yang **7.2x lebih cepat** daripada CRC-32 secara siklus komputasi, (2) Diagnostik presisi tingkat lapisan (misal membedakan galat titik vs garis), dan (3) _Footprint_ ROM esensial sebesar 252 byte yang dapat dimuat di sirkuit minimalistik.
+Keuntungan nyata dari Hybit dalam domain auditabilitas mencakup (1) validasi keanggotaan berbiaya O(1) yang tidak memerlukan nilai checksum tersimpan [VF], (2) diagnostik presisi tingkat lapisan — misalnya membedakan galat titik dari galat garis [VF], dan (3) _footprint_ ROM esensial sebesar 252 byte yang dapat dimuat di sirkuit minimalistik [CC].
+
+> **Catatan pengukuran.** Perbandingan kuantitatif langsung terhadap CRC-32 per siklus komputasi belum dilakukan; klaim keunggulan kecepatan numerik ditahan sampai tersedia benchmark yang dapat direproduksi [AT]. Angka 252 byte terverifikasi dari `pack_rom` atas 28 vektor kanonik.
 
 ---
 
@@ -140,24 +142,24 @@ Pada tingkat fisik, Harvard Architecture diimplementasikan secara harfiah dalam 
 ## Sub-Bagian III-F: Format File Hybit
 
 1. **.hc (Hybit Code)**: Bahasa yang memperlakukan guard sebagai tipe asli (Guard-aware typing).
-2. **.hasm & H-ISA**: Instruksi rakitan khusus mencakup perlindungan asimetris: `HLOAD`, `HCADD`, `HGRD` (Guard check), `HPROJ`, `HDCMP`.
+2. **.hasm & H-ISA**: Instruksi rakitan khusus mencakup perlindungan asimetris. Terimplementasi sampai RTL: `HLOAD`, `HCADD`, `HGRD` (Guard check), `HNRM2`, `HDIST`, `HPACK`, `HCRC`, serta percabangan bersyarat guard `JGD`/`JNGD`. Terimplementasi di HVM saja, belum di HCPU: `HPROJ` (proyeksi subruang Θ/N/K/Q) dan `HDCMP` (dekomposisi ke (U, ρ)).
 3. **.hbc (Bytecode) & HAR (Registry)**: Registri dengan Validasi Terkunci (Dataset-seal hash SHA-256 tersimpan).
 
 ---
 
-## Sub-Bagian III-J: Realisasi Fisik — HCPU (Silikon) & Fotonik
+## Sub-Bagian III-J: Jalur Realisasi Fisik — HCPU (RTL) & Fotonik
 
-Telah dibuktikan bahwa hybit bukan hanya abstraksi. Arsitektur direalisasikan pada dua medium perangkat keras: silikon (melalui HCPU Phase 2.0) dan studi arsitektur fotonik.
+Telah dibuktikan bahwa hybit bukan hanya abstraksi: arsitekturnya terspesifikasi lengkap sampai tingkat RTL yang dapat disintesis dan disimulasi (HCPU Phase 2.0), didampingi studi kelayakan arsitektur fotonik. Keduanya adalah **jalur menuju** perangkat keras, bukan perangkat keras yang sudah difabrikasi.
 
-### 10.1 Realisasi Silikon: Arsitektur HCPU (Phase 2.0)
+### 10.1 Realisasi RTL: Arsitektur HCPU (Phase 2.0)
 
-HCPU adalah **realisasi perangkat keras (RTL)** dari tumpukan komputasi Hybit. Arsitekturnya adalah prosesor **in-order pipelined 5-tahap (Fetch, Decode, Execute, Memory, Writeback)** berbasis _Harvard Architecture_ dengan dukungan H-ISA penuh.
+HCPU adalah **realisasi tingkat RTL** dari tumpukan komputasi Hybit. Arsitekturnya adalah prosesor **in-order pipelined 5-tahap (Fetch, Decode, Execute, Memory, Writeback)** berbasis _Harvard Architecture_ dengan dukungan H-ISA penuh.
 
 #### 10.1.1 Pemetaan Lapis Hybit ke Modul Perangkat Keras
 
 | Lapis Hybit | Komponen Perangkat Keras (RTL) | Implementasi HCPU Phase 2.0 |
 |---|---|---|
-| **Dataset Seal** | `hcpu_rom.v` | ROM Kombinasional 28×144-bit, di-hash (SHA-256) secara fisik |
+| **Dataset Seal** | `hcpu_rom.v` | ROM Kombinasional 28×144-bit; segel SHA-256 diverifikasi di perangkat lunak, bukan oleh sirkuit — hardware hanya menyediakan CRC32 (`hcpu_hisab.v`) |
 | **Guard System** | `hcpu_guard.v` | Sirkuit perbandingan tunggal, validasi G1-G4 & T1-T2 siklus tunggal |
 | **Hybit Engine** | `hcpu_codex_alu.v` | Vektor ALU paralel selebar 18-dimensi (HCADD, HNRM2, HDIST) |
 | **HVM Registers** | `hcpu_regfile.v` | 18 GPR (32-bit) dan 16 H-Reg (144-bit untuk komputasi Hybit) |
@@ -167,11 +169,26 @@ HCPU adalah **realisasi perangkat keras (RTL)** dari tumpukan komputasi Hybit. A
 #### 10.1.2 Kinerja dan Bebas Bahaya (Hazard Resolution)
 Sistem HCPU menangani kendala _load-use_ dan _store-to-load_ secara perangkat keras dengan interlock dan bypass maju (_forwarding_) dari tahapan EX/MEM, memastikan determinisme sempurna. Resolusi operasi kondisional seperti `JGD` (Jump if Guard Pass) diselesaikan dalam siklus komputasi EX yang sama.
 
-#### 10.1.3 Kelayakan Fabrikasi (MPW / ASIC)
-HCPU dirancang siap cetak (Synthesis-Ready) untuk _Efabless Open MPW — SkyWater SKY130_.
-- **Estimasi Area Silikon:** ~113.000 μm² (~0.12 mm²), memuat 28.200 gerbang logika.
+#### 10.1.3 Status Sintesis dan Kelayakan Fabrikasi (MPW / ASIC)
+
+HCPU **tersintesis** dan **tersimulasi**, namun **belum siap cetak**. Sintesis generik pertama yang berhasil dijalankan (Yosys, 26 Agustus 2026) memberi angka terukur berikut [CC]:
+
+| Besaran | Terukur | Estimasi tangan terdahulu |
+|---|---|---|
+| Sel logika | **480.795** | ~28.200 |
+| Flip-flop | **143.309** | — |
+| Luas die | **tidak dapat diturunkan** | ~113.000 μm² |
+
+Selisihnya didominasi satu modul: `hcpu_dataram` menyumbang 416.165 sel — sekitar 87% desain — karena 4096×32 bit dideskripsikan sebagai array register sehingga tersintesis menjadi flip-flop, bukan makro memori. Modul ini tidak ada dalam estimasi tangan terdahulu. Di luar `hcpu_dataram`, desainnya 64.630 sel: masih 2,3× estimasi lama, tetapi pada orde besaran yang sama.
+
+Beberapa baris estimasi justru bertahan baik — regfile (~15.000 vs 16.486), guard checker (~500 vs 609), UART (~200 vs 89) — sementara `hcpu_rom` jauh di atas perkiraan ke arah sebaliknya (~2.000 vs 109) karena tersintesis sebagai logika kombinasional, bukan penyimpanan.
+
+**Konsekuensi terhadap klaim fabrikasi.** Tidak ada PDK SKY130 terpasang pada run tersebut, sehingga angkanya adalah hitungan gerbang generik, bukan sel standar terpetakan; **tidak ada luas μm² maupun timing ns yang dapat diturunkan darinya**. Lebih jauh, 131.072 flip-flop tidak akan muat pada area pengguna 700×700 μm yang ditetapkan `config.json`. Karena itu klaim luas die dan kesiapan _Efabless Open MPW — SkyWater SKY130_ **ditahan** [EH] sampai data RAM dipetakan ke makro SRAM dan sintesis dijalankan ulang terhadap PDK sungguhan. Angka lengkap: `rtl/mpw/hcpu_synth_report.txt`.
+
+**Properti yang tetap terverifikasi** [CC]:
 - HCPU adalah desain _Single Clock Domain_, menihilkan masalah _Cross-Domain Clocking (CDC)_.
-- **Verifikasi**: Melalui _framework_ uji yang meniru 658 validasi Bab I dan 683 dari Bab II; HCPU menunjukkan **0 FAIL** dari ribuan siklus uji operasi.
+- Lima _testbench_ Icarus Verilog (`rtl/tb/`) melaporkan **204 assertion PASS, 0 FAIL**: ROM 30, Guard 34, Codex ALU 6, HISAB 124, integrasi _top-level_ 10 — mencakup penyapuan penuh 28 huruf terhadap ROM dan guard.
+- Jalur topologis terpanjang: 84 tingkat logika, melalui operasi bagi dan modulo-10 pada FSM PRINT (`hcpu_top.v:193-194`). Ini persoalan _timing_, bukan luas.
 
 ### 10.2 Realisasi Fotonik (Studi Kelayakan)
 
@@ -188,17 +205,17 @@ Total margin fungsional fotonik membuktikan kelayakan implementasi masa depan be
 | Milestone | **Bit** | **Qubit** | **Hybit** |
 |---|---|---|---|
 | Definisi formal | 1948 (Shannon) | 1985 (Deutsch) | **2024** |
-| Hardware Pertama | 1945 (ENIAC) | 1998 (NMR) | **2026 (HCPU Silikon)** |
+| Hardware Pertama | 1945 (ENIAC) | 1998 (NMR) | **Belum** (RTL HCPU tersintesis 2026) |
 | Kompilator/ISA | 1957 (Fortran) | 2017 (Qiskit) | **2024 (HCC / H-ISA)** |
 | Validasi Struktural | 1950 (Hamming) | 2012 (Surface) | **2024 (Guard O(1) Intrinsik)** |
 
-**Hybit pada era peluncurannya telah matang**, dilengkapi dengan struktur hardware-ready, arsitektur set instruksi, runtime virtual, dan kerangka OS.
+**Hybit memasuki era peluncurannya dengan stack yang tidak lazim lengkap untuk paradigma seusianya** — arsitektur set instruksi, runtime virtual, desain RTL tersintesis, dan kerangka OS — meskipun tahap fabrikasi silikonnya masih di depan.
 
 ---
 
 ## Sub-Bagian III-L: Preservasi Properti Formal
 
-Setiap properti teoretis pada Bab I dan II dilindungi secara ketat di sepanjang alur silikon (HCPU).
+Setiap properti teoretis pada Bab I dan II dilindungi secara ketat di sepanjang alur RTL (HCPU).
 - $\hat{\Theta} = U + \rho$ divalidasi tiap siklus via HVM Guard G4.
 - Injektivitas dipaksa lewat enkripsi Dataset-Seal.
 - Konsistensi arsitektur (_integer-only_) diwujudkan melalui alokator instruksi murni .hbc yang menolak titik mengambang.
@@ -213,7 +230,7 @@ Setiap properti teoretis pada Bab I dan II dilindungi secara ketat di sepanjang 
 
 1. **Struktur Aljabar Berbeda**: Tiga varietas Birkhoff ($\mathbb{F}_2 \neq \mathbb{C}^2 \neq \mathcal{V}$) terbukti formal [VF].
 2. **Saling Tak Tereduksi**: Terbukti secara matematis bahwa tak satu pun bisa digantikan langsung tanpa dekomposisi ekstrem [VF].
-3. **Pencapaian Silikon HCPU**: Realisasi logis Hybit telah disintesis ke RTL (Phase 2.0) dan siap fabrikasi MPW [CC/RTL].
+3. **Pencapaian RTL HCPU**: Realisasi logis Hybit telah disintesis ke RTL (Phase 2.0) dan lulus seluruh _testbench_ simulasi [CC/RTL]. Kesiapan fabrikasi MPW belum tercapai — lihat §10.1.3 [EH].
 
 ### 13.2 Pernyataan Penutup
 
@@ -225,7 +242,7 @@ $$\boxed{\text{bit} \;\oplus\; \text{qubit} \;\oplus\; \text{hybit} \;=\; \text{
 | **Qubit** | $\mathbb{C}^2$ (Hilbert) | Simulasi Kuanta | QPU, Trapped-Ion, Qubit Superkonduktor |
 | **Hybit** | $\mathcal{V}$ (monoid terkonstrain) | Data Terstruktur + Audit | **HCPU (Hybit Core Processing Unit)** |
 
-Ketiga paradigma diperlukan dan tak dapat mereduksi satu sama lain. Hybit telah beranjak dari pembuktian matematis murni (Bab I dan II) ke realisasi teknologis tervalidasi yang nyata di level perangkat lunak (HVM) maupun perangkat keras silikon (HCPU).
+Ketiga paradigma diperlukan dan tak dapat mereduksi satu sama lain. Hybit telah beranjak dari pembuktian matematis murni (Bab I dan II) ke realisasi teknologis tervalidasi: operasional di level perangkat lunak (HVM) dan terspesifikasi hingga RTL tersintesis yang lulus simulasi (HCPU). Langkah berikutnya — pemetaan ke sel standar dan fabrikasi — belum ditempuh, dan Bab ini tidak mengklaimnya.
 
 ---
 *Seluruh hasil Bab III diverifikasi dari MasterTable HM-28-v1.0-HC18D, spesifikasi arsitektur RTL HCPU Phase 2.0, dan bukti formal matematis.*
