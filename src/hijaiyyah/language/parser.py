@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
+from hijaiyyah.core.exceptions import HijaiyyahError
 from hijaiyyah.language.ast_nodes import (
     ArrayLiteral,
     ASTNode,
@@ -38,7 +39,7 @@ from hijaiyyah.language.ast_nodes import (
 from hijaiyyah.language.lexer import Token, TokenType
 
 
-class ParseError(Exception):
+class ParseError(HijaiyyahError):
     """Raised on syntax errors during parsing."""
 
     def __init__(self, message: str, token: Optional[Token] = None):
@@ -99,6 +100,21 @@ class Parser:
             return self._advance()
         err_msg = msg or f"Expected {ttype.name}"
         raise ParseError(err_msg, tok)
+
+    def _expect_member_name(self, msg: str) -> Token:
+        """
+        Accept an identifier, or a keyword standing in for one.
+
+        After '::' or '.', a keyword can never begin a new construct, so
+        reading it as a plain name is unambiguous. Without this, any stdlib
+        function whose name collides with a keyword is simply unreachable:
+        hm::exomatrix::audit could not be called at all, because 'audit'
+        lexes as KW_AUDIT rather than IDENTIFIER.
+        """
+        tok = self._current()
+        if tok.type == TokenType.IDENTIFIER or tok.type.name.startswith("KW_"):
+            return self._advance()
+        raise ParseError(msg, tok)
 
     def _skip_newlines(self) -> None:
         while self._at(TokenType.NEWLINE):
@@ -477,8 +493,8 @@ class Parser:
         while True:
             if self._at(TokenType.DOT):
                 self._advance()
-                name_tok = self._expect(
-                    TokenType.IDENTIFIER, "Expected method/field name after '.'"
+                name_tok = self._expect_member_name(
+                    "Expected method or field name after '.'"
                 )
 
                 # Method call: obj.method(args)
@@ -594,7 +610,7 @@ class Parser:
         if self._at(TokenType.DCOLON):
             path_parts = [name]
             while self._match(TokenType.DCOLON):
-                next_tok = self._expect(TokenType.IDENTIFIER, "Expected identifier after '::'")
+                next_tok = self._expect_member_name("Expected a name after '::'")
                 path_parts.append(next_tok.value)
 
             full_path = "::".join(path_parts)

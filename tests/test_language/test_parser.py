@@ -47,3 +47,37 @@ def test_hijaiyyah_literal():
     assert isinstance(stmt, LetStmt)
     assert isinstance(stmt.value, Literal)
     assert stmt.value.lit_type == "hybit_ref"
+
+
+# ── Keywords as member names ─────────────────────────────────────
+# A stdlib function whose name collides with a keyword used to be
+# unreachable: 'audit' lexes as KW_AUDIT, so hm::exomatrix::audit could not
+# be parsed at all and examples/five_fields_demo.hc did not run. After '::'
+# or '.', a keyword cannot begin a new construct, so it is read as a name.
+
+def test_keyword_is_accepted_after_double_colon():
+    ast = Parser(Lexer("hm::exomatrix::audit(E);").tokenize()).parse()
+    assert ast is not None
+
+
+def test_keyword_is_accepted_after_dot():
+    ast = Parser(Lexer("let x = h.audit();").tokenize()).parse()
+    assert ast is not None
+
+
+def test_every_keyword_survives_as_a_member_name():
+    from hijaiyyah.language.tokens import KEYWORDS
+
+    for kw in KEYWORDS:
+        Parser(Lexer(f"hm::mod::{kw}(x);").tokenize()).parse()
+        Parser(Lexer(f"obj.{kw}();").tokenize()).parse()
+
+
+def test_keyword_still_keyword_in_statement_position():
+    """The fix must not let a keyword be used as a bare variable name."""
+    import pytest
+
+    from hijaiyyah.language.parser import ParseError
+
+    with pytest.raises(ParseError):
+        Parser(Lexer("let audit = 1;").tokenize()).parse()
