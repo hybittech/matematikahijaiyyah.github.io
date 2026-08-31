@@ -21,6 +21,8 @@ from typing import Any, Callable, ClassVar, Dict, List, Optional
 from hijaiyyah.core.exceptions import EBNFSemanticError
 from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
 from hijaiyyah.language.ast_nodes import (
+    ArrayLiteral,
+    AssignStmt,
     ASTNode,
     BinaryExpr,
     Block,
@@ -286,10 +288,19 @@ class Environment:
 
     def __init__(self, parent: Optional[Environment] = None):
         self._values: Dict[str, Any] = {}
+        # name -> the keyword it was declared with, for bindings that cannot be
+        # reassigned. Kept so the error can suggest the right fix: `let mut`
+        # rescues a `let`, but nothing rescues a `const`.
+        self._frozen: Dict[str, str] = {}
         self._parent = parent
 
-    def define(self, name: str, value: Any) -> None:
+    def define(
+        self, name: str, value: Any, *, mutable: bool = True, kind: str = "let"
+    ) -> None:
         self._values[name] = value
+        self._frozen.pop(name, None)
+        if not mutable:
+            self._frozen[name] = kind
 
     def get(self, name: str) -> Any:
         if name in self._values:
@@ -301,6 +312,19 @@ class Environment:
 
     def assign(self, name: str, value: Any) -> None:
         if name in self._values:
+            kind = self._frozen.get(name)
+            if kind == "const":
+                raise EBNFSemanticError(
+                    f"Cannot assign to constant '{name}' — "
+                    "declare it with `let mut` if it needs to change"
+                )
+            if kind is not None:
+                # `let` binds immutably, as docs/hc_language.md §5.1 specifies;
+                # `let mut` is the mutable form.
+                raise EBNFSemanticError(
+                    f"Cannot assign to immutable binding '{name}' — "
+                    f"declare it as `let mut {name}`"
+                )
             self._values[name] = value
             return
         parent = self._parent
@@ -425,12 +449,17 @@ class HCEvaluator:
 
     def _eval_LetStmt(self, node: LetStmt) -> Any:
         val = self.evaluate(node.value)
-        self.current_env.define(node.name, val)
+        self.current_env.define(node.name, val, mutable=node.mutable)
+        return val
+
+    def _eval_AssignStmt(self, node: AssignStmt) -> Any:
+        val = self.evaluate(node.value)
+        self.current_env.assign(node.name, val)
         return val
 
     def _eval_ConstStmt(self, node: ConstStmt) -> Any:
         val = self.evaluate(node.value)
-        self.current_env.define(node.name, val)
+        self.current_env.define(node.name, val, mutable=False, kind="const")
         return val
 
     def _eval_ExpressedStmt(self, node: ExpressedStmt) -> Any:
@@ -668,6 +697,16 @@ class HCEvaluator:
         raise EBNFSemanticError(f"Unknown hybit method: '{method}'")
 
     # ── Index expressions (h[0], arr[i]) ─────────────────────────
+
+    def _eval_ArrayLiteral(self, node: ArrayLiteral) -> List[Any]:
+        """
+        Build a list from `[a, b, c]`.
+
+        The lexer, parser and IndexExpr all handled arrays; only this was
+        missing, so an array literal parsed cleanly and then raised
+        "No evaluator for AST node" the moment it was evaluated.
+        """
+        return [self.evaluate(element) for element in node.elements]
 
     def _eval_IndexExpr(self, node) -> Any:
         """Handle h[0], arr[i], etc."""

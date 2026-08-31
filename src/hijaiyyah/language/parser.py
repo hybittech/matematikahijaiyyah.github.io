@@ -12,6 +12,7 @@ from typing import List, Optional, Tuple
 from hijaiyyah.core.exceptions import HijaiyyahError
 from hijaiyyah.language.ast_nodes import (
     ArrayLiteral,
+    AssignStmt,
     ASTNode,
     BinaryExpr,
     Block,
@@ -85,6 +86,23 @@ class Parser:
 
     def _at(self, *types: TokenType) -> bool:
         return self._current().type in types
+
+    def _skip_newlines(self) -> None:
+        """
+        Consume line breaks inside a bracketed construct.
+
+        The lexer emits NEWLINE, and the parser only steps over it at statement
+        boundaries — so inside brackets a line break was a hard stop and an
+        argument list could not span lines. Within (), [] and a call's
+        arguments a newline carries no meaning, so it is skipped here.
+        """
+        while self._at(TokenType.NEWLINE):
+            self._advance()
+
+    def _peek_is(self, offset: int, ttype: TokenType) -> bool:
+        """True if the token `offset` positions ahead has this type."""
+        pos = self._pos + offset
+        return pos < len(self._tokens) and self._tokens[pos].type == ttype
 
     def _at_value(self, value: str) -> bool:
         return self._current().value == value
@@ -172,6 +190,17 @@ class Parser:
         if tok.type == TokenType.EOF:
             return None
 
+        # Assignment: `identifier = expression`. The grammar has carried this
+        # production all along (assignment = identifier , '=' , expression);
+        # only the parser was missing it, which left the language unable to
+        # accumulate — a `for` loop could not maintain a running total.
+        if tok.type == TokenType.IDENTIFIER and self._peek_is(1, TokenType.ASSIGN):
+            name_tok = self._advance()
+            self._advance()  # '='
+            value = self._parse_expression()
+            self._match(TokenType.SEMICOLON)
+            return AssignStmt(name=name_tok.value, value=value)
+
         # Expression statement
         expr = self._parse_expression()
         self._match(TokenType.SEMICOLON)
@@ -181,7 +210,7 @@ class Parser:
 
     def _parse_let(self) -> LetStmt:
         self._expect(TokenType.KW_LET)
-        _ = self._match(TokenType.KW_MUT) is not None
+        mutable = self._match(TokenType.KW_MUT) is not None
         name_tok = self._expect(TokenType.IDENTIFIER, "Expected variable name")
         type_ann = ""
         if self._match(TokenType.COLON):
@@ -189,7 +218,9 @@ class Parser:
         self._expect(TokenType.ASSIGN, "Expected '=' in let statement")
         value = self._parse_expression()
         self._match(TokenType.SEMICOLON)
-        return LetStmt(name=name_tok.value, value=value, type_ann=type_ann)
+        return LetStmt(
+            name=name_tok.value, value=value, type_ann=type_ann, mutable=mutable
+        )
 
     def _parse_const(self) -> ConstStmt:
         self._expect(TokenType.KW_CONST)
@@ -563,7 +594,9 @@ class Parser:
         # Parenthesized expression
         if tok.type == TokenType.LPAREN:
             self._advance()
+            self._skip_newlines()
             expr = self._parse_expression()
+            self._skip_newlines()
             self._expect(TokenType.RPAREN, "Expected ')' after expression")
             return expr
 
@@ -585,13 +618,18 @@ class Parser:
         self._expect(TokenType.LBRACKET)
         elements: List[ASTNode] = []
 
+        self._skip_newlines()
         if not self._at(TokenType.RBRACKET):
             elements.append(self._parse_expression())
+            self._skip_newlines()
             while self._match(TokenType.COMMA):
+                self._skip_newlines()
                 if self._at(TokenType.RBRACKET):
                     break
                 elements.append(self._parse_expression())
+                self._skip_newlines()
 
+        self._skip_newlines()
         self._expect(TokenType.RBRACKET, "Expected ']' after array elements")
         return ArrayLiteral(elements=elements)
 
@@ -639,13 +677,17 @@ class Parser:
         """Parse comma-separated argument list (may be empty)."""
         args: List[ASTNode] = []
 
+        self._skip_newlines()
         if self._at(TokenType.RPAREN):
             return args
 
         args.append(self._parse_expression())
+        self._skip_newlines()
         while self._match(TokenType.COMMA):
+            self._skip_newlines()
             if self._at(TokenType.RPAREN):
                 break
             args.append(self._parse_expression())
+            self._skip_newlines()
 
         return args
