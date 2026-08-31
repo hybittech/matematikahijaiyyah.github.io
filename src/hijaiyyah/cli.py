@@ -8,6 +8,7 @@ repository documented a language nobody could actually invoke.
     hc run program.hc     execute a program
     hc check program.hc   parse it and report errors, without running it
     hc repl               interactive session
+    hc lsp                language server, over stdin/stdout
 """
 
 from __future__ import annotations
@@ -166,6 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("files", type=Path, nargs="+")
 
     sub.add_parser("repl", help="start an interactive session")
+    sub.add_parser("lsp", help="run the language server on stdin/stdout")
 
     return parser
 
@@ -180,6 +182,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_check(args.files)
     if args.command == "repl":
         return cmd_repl()
+    if args.command == "lsp":
+        from .lsp import main as lsp_main
+
+        return lsp_main()
 
     parser.print_help()
     return 0

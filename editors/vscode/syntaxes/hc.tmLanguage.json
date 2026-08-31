@@ -1,0 +1,248 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "HC",
+  "scopeName": "source.hc",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#letters"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#stdlib"
+    },
+    {
+      "include": "#builtins"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#identifiers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.hc",
+          "begin": "//",
+          "end": "$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.hc"
+            }
+          }
+        },
+        {
+          "name": "comment.block.hc",
+          "begin": "\\(--",
+          "end": "--\\)",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.begin.hc"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.end.hc"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.hc",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.hc",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "letters": {
+      "patterns": [
+        {
+          "name": "constant.character.hijaiyyah.hc",
+          "match": "'(?:هـ|[ابتثجحخدذرزسشصضطظعغفقكلمنوي])'"
+        },
+        {
+          "name": "invalid.illegal.letter.hc",
+          "match": "'[^']*'"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.hc",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.hc",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.hc",
+          "match": "\\b(break|catch|continue|else|for|if|in|match|return|try|while)\\b"
+        },
+        {
+          "name": "storage.type.hc",
+          "match": "\\b(const|enum|fn|let|mut|struct|type|use)\\b"
+        },
+        {
+          "name": "constant.language.hc",
+          "match": "\\b(false|none|true)\\b"
+        },
+        {
+          "name": "keyword.other.codex.hc",
+          "match": "\\b(audit|codex|inspect|verify)\\b"
+        }
+      ]
+    },
+    "stdlib": {
+      "patterns": [
+        {
+          "match": "\\b(hm)(::)(vectronometry|differential|integral|geometry|exomatrix)(::)([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "entity.name.namespace.hc"
+            },
+            "2": {
+              "name": "punctuation.separator.namespace.hc"
+            },
+            "3": {
+              "name": "entity.name.namespace.hc"
+            },
+            "4": {
+              "name": "punctuation.separator.namespace.hc"
+            },
+            "5": {
+              "name": "entity.name.function.hc"
+            }
+          }
+        },
+        {
+          "match": "\\b(hm)(::)(vectronometry|differential|integral|geometry|exomatrix)\\b",
+          "captures": {
+            "1": {
+              "name": "entity.name.namespace.hc"
+            },
+            "2": {
+              "name": "punctuation.separator.namespace.hc"
+            },
+            "3": {
+              "name": "entity.name.namespace.hc"
+            }
+          }
+        }
+      ]
+    },
+    "builtins": {
+      "name": "support.function.builtin.hc",
+      "match": "\\b(abs|assert|assert_approx|identify|is_hijaiyyah|len|load|load_id|now|print|println|sqrt|zero)\\b(?=\\s*\\()"
+    },
+    "functions": {
+      "patterns": [
+        {
+          "match": "\\b(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.function.hc"
+            },
+            "2": {
+              "name": "entity.name.function.hc"
+            }
+          }
+        },
+        {
+          "name": "entity.name.function.call.hc",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b(?=\\s*\\()"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.range.hc",
+          "match": "\\.\\.=?"
+        },
+        {
+          "name": "keyword.operator.arrow.hc",
+          "match": "->|=>"
+        },
+        {
+          "name": "keyword.operator.comparison.hc",
+          "match": "==|!=|<=|>="
+        },
+        {
+          "name": "keyword.operator.assignment.hc",
+          "match": "\\+=|-=|\\*=|/=|="
+        },
+        {
+          "name": "keyword.operator.logical.hc",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.arithmetic.hc",
+          "match": "[+\\-*/%]"
+        },
+        {
+          "name": "keyword.operator.comparison.hc",
+          "match": "[<>]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.namespace.hc",
+          "match": "::"
+        },
+        {
+          "name": "punctuation.terminator.hc",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.separator.hc",
+          "match": "[,:]"
+        },
+        {
+          "name": "punctuation.accessor.hc",
+          "match": "\\."
+        }
+      ]
+    },
+    "identifiers": {
+      "name": "variable.other.hc",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+    }
+  }
+}
