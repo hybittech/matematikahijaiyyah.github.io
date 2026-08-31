@@ -254,7 +254,7 @@ def process_letter(
     if glyph_dir:
         glyph_path = Path(glyph_dir) / f"{entry.index}.png"
     else:
-        glyph_path = _ROOT / "data" / "kfgqpc_seal" / "glyphs" / f"{entry.index}.png"
+        glyph_path = _ROOT / "data" / "kfgqpc" / "glyphs" / f"{entry.index}.png"
 
     if not glyph_path.exists():
         result.error = f"Not found: {glyph_path}"

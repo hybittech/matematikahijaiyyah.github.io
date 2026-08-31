@@ -146,8 +146,8 @@ for item in tree:
     if not p.exists():
         p.touch()
 
-# Special for data/kfgqpc_seal/glyphs/*.png
-glyph_dir = Path("data/kfgqpc_seal/glyphs")
+# Special for data/kfgqpc/glyphs/*.png
+glyph_dir = Path("data/kfgqpc/glyphs")
 glyph_dir.mkdir(parents=True, exist_ok=True)
 for i in range(1, 29):
     glyph_path = glyph_dir / f"{i}.png"

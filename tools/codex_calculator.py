@@ -12,7 +12,7 @@ _src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 
-from hijaiyyah.algebra.integral import string_integral  # noqa: E402
+from hijaiyyah.algebra.aggregametric import string_integral  # noqa: E402
 
 
 def main() -> None:
