@@ -112,9 +112,15 @@ class HISAMachine:
         entries = self.table.all_entries()
 
         # ── HLOAD (CLOAD): load letter into H-register ──────────
+        # IMM is a 1-based letter index, 1..28, matching the Master Table's own
+        # numbering (CodexEntry.index = i + 1) and the HCPU ROM, whose address
+        # port is documented as "letter index (1-28)" and reports valid = 0 for
+        # address 0. Indexing `entries` directly with IMM was off by one, so
+        # HLOAD H0, #2 loaded Ba on hardware and Ta here — silently, since every
+        # canonical letter passes the guards.
         if op == OpCode.HLOAD:
-            if imm < len(entries):
-                entry = entries[imm]
+            if 1 <= imm <= len(entries):
+                entry = entries[imm - 1]
                 self.regs.hreg[dst] = list(entry.vector)
                 return f"HLOAD H{dst} ← {entry.char} ({entry.name}) [idx={imm}]"
             return f"HLOAD H{dst} ← INVALID INDEX {imm}"
@@ -169,24 +175,30 @@ class HISAMachine:
             h = self.regs.hreg[s1]
             U = compute_U(h)
             rho = h[0] - U
-            self.regs.gpr[0] = U
-            self.regs.gpr[1] = rho
-            return f"HDCMP H{s1}: U={U}, ρ={rho} → GPR[0],GPR[1]"
+            # Two results, so this one takes a register pair: DST and DST+1.
+            second = (dst + 1) % len(self.regs.gpr)
+            self.regs.gpr[dst] = U
+            self.regs.gpr[second] = rho
+            return f"HDCMP H{s1}: U={U}, ρ={rho} → GPR[{dst}],GPR[{second}]"
 
         # ── HNRM2: squared norm ─────────────────────────────────
+        # Scalar results go to GPR[DST], not GPR[0]. Writing GPR[0] ignored the
+        # instruction's own destination field: on the HCPU, `HNRM2 R5, H0` puts
+        # the norm in R5, so the two machines left the answer in different
+        # registers while both reporting success.
         if op == OpCode.HNRM2:
             h = self.regs.hreg[s1]
             n2 = sum(x * x for x in h[:14])
-            self.regs.gpr[0] = n2
-            return f"HNRM2 GPR[0] = ‖H{s1}‖² = {n2}"
+            self.regs.gpr[dst] = n2
+            return f"HNRM2 GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
         # ── HDIST: squared Euclidean distance ───────────────────
         if op == OpCode.HDIST:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             d2 = sum((a[i] - b[i]) ** 2 for i in range(14))
-            self.regs.gpr[0] = d2
-            return f"HDIST GPR[0] = ‖H{s1} - H{s2}‖² = {d2}"
+            self.regs.gpr[dst] = d2
+            return f"HDIST GPR[{dst}] = ‖H{s1} - H{s2}‖² = {d2}"
 
         # ── HEXMT: build exomatrix ──────────────────────────────
         if op == OpCode.HEXMT:
@@ -286,28 +298,28 @@ class HISAMachine:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             d2 = sum((a[i] - b[i]) ** 2 for i in range(14))
-            self.regs.gpr[0] = d2
-            return f"VDIST GPR[0] = ‖H{s1} - H{s2}‖² = {d2}"
+            self.regs.gpr[dst] = d2
+            return f"VDIST GPR[{dst}] = ‖H{s1} - H{s2}‖² = {d2}"
 
         if op == OpCode.VRHO:
             h = self.regs.hreg[s1]
             U = compute_U(h)
             rho = h[0] - U
-            self.regs.gpr[0] = rho
-            return f"VRHO GPR[0] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
+            self.regs.gpr[dst] = rho
+            return f"VRHO GPR[{dst}] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
 
         if op == OpCode.VNORM:
             h = self.regs.hreg[s1]
             n2 = sum(x * x for x in h[:14])
-            self.regs.gpr[0] = n2
-            return f"VNORM GPR[0] = ‖H{s1}‖² = {n2}"
+            self.regs.gpr[dst] = n2
+            return f"VNORM GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
         if op == OpCode.VDOT:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             ip = sum(a[i] * b[i] for i in range(14))
-            self.regs.gpr[0] = ip
-            return f"VDOT GPR[0] = ⟨H{s1}, H{s2}⟩ = {ip}"
+            self.regs.gpr[dst] = ip
+            return f"VDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩ = {ip}"
 
         # ── Control Flow ────────────────────────────────────────
         if op == OpCode.JMP:
