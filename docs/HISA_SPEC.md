@@ -329,6 +329,44 @@ IMM:    0xBCD = 3021
 
 ## 6. Opcode Map
 
+### 6.0 Status pembekuan dan sumber kebenaran
+
+**H-ISA v1.0 — encoding dibekukan.**
+
+Sumber kebenaran encoding adalah **`rtl/hcpu_pkg.vh`**, bukan dokumen ini.
+Bila keduanya berbeda, RTL yang benar dan dokumen ini yang diperbaiki.
+
+Alasannya bukan preferensi melainkan asimetri biaya: RTL terverifikasi oleh
+205 assertion dan menuju silikon, tempat nomor yang keliru tidak bisa ditambal.
+Perangkat lunak dapat dirilis ulang; cetakan tidak.
+
+Aturan yang mengikat sejak v1.0:
+
+1. **Opcode yang sudah ada di RTL tidak boleh berubah nilainya.** Perubahan
+   semacam itu memutus setiap berkas `.hbc` yang sudah ada.
+2. **Opcode baru untuk perangkat keras** mengambil slot kosong pada blok yang
+   sesuai fungsinya, lalu ditambahkan ke `RTL_IMPLEMENTED`.
+3. **Opcode khusus perangkat lunak** — dijalankan HVM dan mesin HISA, tidak
+   oleh HCPU — wajib menempati nilai yang tidak dipakai RTL, sehingga
+   memindahkannya ke perangkat keras kelak tidak memaksa penomoran ulang.
+4. Setiap perubahan menaikkan versi ISA.
+
+`tests/test_hisa/test_isa_parity.py` menegakkan aturan 1 dan 3 secara
+mekanis: ia mem-parse `hcpu_pkg.vh` langsung, bukan salinan yang disalin
+tangan. Selisih apa pun membuat suite merah.
+
+**Latar belakang.** Sampai v1.0, ketiga tempat ini memuat tiga encoding yang
+berbeda. Sisi perangkat lunak memberi `HLOAD` nilai 0x01, sementara RTL membaca
+0x01 sebagai `HALT` — artinya instruksi pertama dari program hasil kompilasi
+akan menghentikan prosesor. Dari tiga belas mnemonic yang didefinisikan kedua
+sisi, hanya empat yang sepakat. Rekonsiliasi v1.0 menyelaraskan seluruhnya ke
+RTL dan memasang gerbang di atas.
+
+Kolom **HCPU** pada tabel di bawah menandai opcode yang benar-benar dapat
+dieksekusi perangkat keras. Entri bertanda "perangkat lunak saja" berjalan di
+HVM dan mesin HISA saja; memakainya dalam program yang ditujukan ke HCPU akan
+memicu `HALT_ERR` (0xFF).
+
 ### 6.1 Opcode Ranges
 
 | Range | Kategori | Jumlah |
@@ -351,17 +389,23 @@ IMM:    0xBCD = 3021
 
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
-| 0x00 | `NOP` | — | No operation |
-| 0x01 | `HALT` | — | Stop execution |
-| 0x02 | `RESET` | — | Reset machine state |
-| 0x03 | `MOV` | R | `DST ← S1` |
-| 0x04 | `MOVI` | I | `DST ← IMM` |
-| 0x05 | `PUSH` | R | Push S1 to stack |
-| 0x06 | `POP` | R | Pop to DST |
-| 0x07 | `CALL` | J | Call subroutine at IMM |
-| 0x08 | `RET` | — | Return from subroutine |
-| 0x09 | `SYSCALL` | I | System call IMM |
-| 0x0A–0x0F | — | — | Reserved |
+| Opcode | Mnemonic | Format | HCPU | Deskripsi |
+|---|---|---|---|---|
+| 0x00 | `NOP` | — | ✅ | No operation |
+| 0x01 | `HALT` | — | ✅ | Stop execution |
+| 0x02 | `RESET` | — | — | Reset machine state |
+| 0x03 | `MOV` | R | ✅ | `DST ← S1` |
+| 0x04 | `MOVI` | I | ✅ | `DST ← IMM` |
+| 0x06 | `HNRM2` | C | ✅ | `GPR[DST] ← ‖v₁₄(H[S1])‖²` |
+| 0x07 | `HDIST` | C | ✅ | `GPR[DST] ← ‖H[S1] − H[S2]‖²₁₄` |
+| 0x09 | `SYSCALL` | I | — | System call IMM |
+| 0x05, 0x08, 0x0A–0x0F | — | — | — | Reserved |
+
+> **Perubahan v1.0.** `PUSH` dan `POP` sebelumnya tercantum di 0x05/0x06 dan
+> `CALL`/`RET` di 0x07/0x08. HCPU menempati 0x06/0x07 untuk `HNRM2`/`HDIST`,
+> dan RTL adalah rujukan yang mengikat, sehingga keempatnya dipindahkan —
+> `PUSH`/`POP` ke blok Memory (0x32/0x33) dan `CALL`/`RET` ke ekor blok
+> Comparison & Branch (0x2E/0x2F).
 
 #### Arithmetic & Logic (0x10–0x1F)
 
@@ -399,7 +443,11 @@ IMM:    0xBCD = 3021
 | 0x28 | `JGE` | B | Jump if greater or equal |
 | 0x29 | `JGD` | B | Jump if GUARD flag set |
 | 0x2A | `JNGD` | B | Jump if GUARD flag not set |
-| 0x2B–0x2F | — | — | Reserved |
+| 0x2B | `JGP` | B | Jump if guard pass — perangkat lunak saja |
+| 0x2C | `JGF` | B | Jump if guard fail — perangkat lunak saja |
+| 0x2D | `JNP` | B | Jump if not pass — perangkat lunak saja |
+| 0x2E | `CALL` | J | Call subroutine at IMM — perangkat lunak saja |
+| 0x2F | `RET` | — | Return from subroutine — perangkat lunak saja |
 
 #### Memory (0x30–0x3F)
 
@@ -407,17 +455,24 @@ IMM:    0xBCD = 3021
 |---|---|---|---|
 | 0x30 | `LOAD` | I | `DST ← MEM[S1 + IMM]` |
 | 0x31 | `STORE` | I | `MEM[S1 + IMM] ← S2` |
-| 0x32 | `LOADR` | R | `DST ← ROM[S1]` |
-| 0x33 | `LEA` | I | `DST ← address(S1 + IMM)` |
+| 0x32 | `PUSH` | R | Push GPR[S1] to stack |
+| 0x33 | `POP` | R | Pop stack into GPR[DST] |
 | 0x34–0x3F | — | — | Reserved |
+
+> **Perubahan v1.0.** 0x32/0x33 sebelumnya dialokasikan untuk `LOADR` dan
+> `LEA`; HCPU sudah menggunakannya untuk `PUSH`/`POP`. Keduanya kini tercatat
+> di sini, sesuai lokasi yang memang lebih tepat secara semantik. `LOADR` dan
+> `LEA` belum dialokasikan ulang.
 
 #### Codex Operations (0x40–0x5F)
 
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
-| 0x40 | `CLOAD` | C | Load codex dari ROM ke H-Reg: `H[DST] ← ROM[IMM]` |
+| 0x40 | `HLOAD` | C | Load codex dari ROM ke H-Reg: `H[DST] ← ROM[IMM]` |
+| 0x40 | `CLOAD` | C | Alias dari `HLOAD` (ejaan spesifikasi lama) |
 | 0x41 | `CSTORE` | C | Store H-Reg ke memori |
-| 0x42 | `CADD` | C | `H[DST] ← H[S1] + H[S2]` (vektor 18D) |
+| 0x42 | `HCADD` | C | `H[DST] ← H[S1] + H[S2]` (vektor 18D) |
+| 0x42 | `CADD` | C | Alias dari `HCADD` (ejaan spesifikasi lama) |
 | 0x43 | `CSUB` | C | `H[DST] ← H[S1] - H[S2]` (delta 14D) |
 | 0x44 | `CGET` | C | `GPR[DST] ← H[S1][IMM]` (ambil komponen) |
 | 0x45 | `CSET` | C | `H[DST][IMM] ← GPR[S1]` (set komponen) |
@@ -431,18 +486,28 @@ IMM:    0xBCD = 3021
 | 0x4D | `CU` | C | `GPR[DST] ← U(H[S1])` (turning budget) |
 | 0x4E | `CTHETA` | C | `GPR[DST] ← Θ̂(H[S1])` (extract theta) |
 | 0x4F | `CMOD4` | C | `GPR[DST] ← Θ̂(H[S1]) mod 4` |
-| 0x50 | `CAN` | C | `GPR[DST] ← A_N(H[S1])` |
-| 0x51 | `CAK` | C | `GPR[DST] ← A_K(H[S1])` |
-| 0x52 | `CAQ` | C | `GPR[DST] ← A_Q(H[S1])` |
+| 0x50 | `HPACK` | C | Nibble-pack H[S1] ke kata HISAB |
+| 0x51 | `HCRC` | C | CRC32 atas frame terpaket |
 | 0x53 | `CPHI` | C | `GPR[DST] ← Φ(H[S1])` (Frobenius energy) |
 | 0x54 | `CIDENT` | C | `GPR[DST] ← identify(H[S1])` (huruf index) |
-| 0x55–0x5F | — | — | Reserved for future codex ops |
+| 0x55 | `HEXMT` | C | Bangun exomatrix 5×5 — perangkat lunak saja |
+| 0x56 | `HDCMP` | C | Dekomposisi ke (U, ρ) — perangkat lunak saja |
+| 0x57 | `HSER` | C | Serialize ke frame HISAB — perangkat lunak saja |
+| 0x58 | `HDES` | C | Deserialize frame HISAB — perangkat lunak saja |
+| 0x59 | `VSCL` | C | Perkalian skalar — perangkat lunak saja |
+| 0x52, 0x5A–0x5F | — | — | Reserved |
+
+> **Perubahan v1.0.** 0x50/0x51 sebelumnya dialokasikan untuk `CAN`/`CAK`;
+> HCPU sudah menggunakannya untuk `HPACK`/`HCRC`. `CAN`, `CAK`, dan `CAQ`
+> belum dialokasikan ulang — ketiganya dapat dibaca lewat `CGET` (0x44)
+> dengan IMM 14, 15, dan 16.
 
 #### Guard & Audit (0x60–0x6F)
 
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
-| 0x60 | `VCHK` | C | Guard check H[S1] → set GUARD flag |
+| 0x60 | `HGRD` | C | Guard check H[S1] → set GUARD flag |
+| 0x60 | `VCHK` | C | Alias dari `HGRD` (ejaan spesifikasi lama) |
 | 0x61 | `VCHK1` | C | Check G1 only: ρ ≥ 0 |
 | 0x62 | `VCHK2` | C | Check G2 only: A_N = ΣN |
 | 0x63 | `VCHK3` | C | Check G3 only: A_K = ΣK |
@@ -488,13 +553,24 @@ IMM:    0xBCD = 3021
 
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
-| 0xA0 | `EMIT` | R | Print GPR[S1] |
-| 0xA1 | `EMITC` | C | Print codex H[S1] |
-| 0xA2 | `EMITS` | I | Print string at address IMM |
-| 0xA3 | `DUMP` | — | Dump machine state |
-| 0xA4 | `TRACE` | I | Enable/disable trace (IMM=0/1) |
-| 0xA5 | `BREAK` | — | Breakpoint |
+| 0xA0 | `PRINT` | R | Print GPR[S1] |
+| 0xA0 | `EMIT` | R | Alias dari `PRINT` (ejaan spesifikasi lama) |
+| 0xA1 | `PRINTH` | C | Print codex H[S1] — perangkat lunak saja |
+| 0xA1 | `EMITC` | C | Alias dari `PRINTH` |
+| 0xA2 | `EMITS` | I | Print string at address IMM — perangkat lunak saja |
+| 0xA3 | `DUMP` | — | Dump machine state — perangkat lunak saja |
+| 0xA4 | `TRACE` | I | Enable/disable trace (IMM=0/1) — perangkat lunak saja |
+| 0xA5 | `BREAK` | — | Breakpoint — perangkat lunak saja |
 | 0xA6–0xAF | — | — | Reserved |
+
+#### Error (0xFF)
+
+| Opcode | Mnemonic | Format | HCPU | Deskripsi |
+|---|---|---|---|---|
+| 0xFF | `HALT_ERR` | — | ✅ | Berhenti karena opcode tak terimplementasi atau instruksi gagal |
+
+HCPU menaikkan `HALT_ERR` ketika menemui opcode di luar `RTL_IMPLEMENTED` —
+termasuk setiap entri "perangkat lunak saja" di atas.
 
 ---
 
