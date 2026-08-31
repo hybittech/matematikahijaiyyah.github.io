@@ -13,7 +13,7 @@ let mut passed = 0;
 let mut rejected = 0;
 let mut total_theta = 0;
 
-for i in 0..28 {
+for i in 1..=28 {
     let h = load_id(i);
 
     // Every canonical letter passes every guard. A rejection here would mean
@@ -40,7 +40,7 @@ println("=== Localising a fault, not merely detecting one ===");
 // left over after the curve budget U is spent; a negative rho would mean the
 // letter claims more curvature than its turning can support. A checksum can
 // only report that something changed, never which layer.
-for i in 0..6 {
+for i in 1..=6 {
     let h = load_id(i);
     println("  index", i,
             "| theta", h.theta(),
@@ -53,7 +53,7 @@ println("=== Per-relation detail for one reading ===");
 
 // guard_detail() returns the five audit relations separately, so a caller
 // can report which invariant broke rather than a single failed bit.
-let sample = load_id(21);
+let sample = load_id(22);
 println("Detail:", sample.guard_detail());
 
 println("All readings validated.");

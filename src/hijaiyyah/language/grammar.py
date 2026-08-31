@@ -606,7 +606,7 @@ println("Letter Ba:", h.theta(), h.guard());
         "guard_all",
         "Verify all 28 letters pass guard",
         """\
-for i in 0..27 {
+for i in 1..=28 {
     let h = load_id(i);
     if !h.guard() {
         println("FAIL:", i);

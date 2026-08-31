@@ -92,7 +92,7 @@ def test_counting_letters_that_pass_a_guard() -> None:
     """The shape docs/examples/iot_guard.hc had to avoid writing."""
     source = """
     let mut passed = 0;
-    for i in 0..28 {
+    for i in 1..=28 {
         let h = load_id(i);
         if h.guard() { passed = passed + 1; }
     }

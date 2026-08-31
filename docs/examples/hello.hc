@@ -24,6 +24,7 @@ println("Guard:", jim.guard());
 // guard_detail() returns the individual audit relations instead of a verdict.
 println("Detail:", jim.guard_detail());
 
-// Letters can also be fetched by index, 0-27, in canonical order.
-let first = load_id(0);
-println("Letter 0:", first, "theta =", first.theta());
+// Letters can also be fetched by index, 1-28, in canonical order —
+// the same numbering the Master Table and the HCPU ROM use.
+let first = load_id(1);
+println("Letter 1:", first, "theta =", first.theta());

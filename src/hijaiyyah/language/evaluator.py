@@ -413,10 +413,19 @@ class HCEvaluator:
         raise EBNFSemanticError(f"load() expects char, got {type(ch).__name__}")
 
     def _bi_load_id(self, idx: int) -> CodexEntry:
+        """
+        Load a letter by its 1-based index, 1..28.
+
+        Everything else in the system numbers letters from 1 —
+        CodexEntry.index, the HCPU ROM, the H-ISA HLOAD instruction, and
+        §13.1 of the language spec. This builtin alone counted from 0, which
+        is the same off-by-one that made HLOAD load Ba on hardware and Ta in
+        software until the execution parity tests caught it.
+        """
         entries = _all_entries()
-        if 0 <= idx < len(entries):
-            return entries[idx]
-        raise EBNFSemanticError(f"load_id({idx}): out of range 0..{len(entries) - 1}")
+        if 1 <= idx <= len(entries):
+            return entries[idx - 1]
+        raise EBNFSemanticError(f"load_id({idx}): out of range 1..{len(entries)}")
 
     def _bi_is_hijaiyyah(self, ch: Any) -> bool:
         if not isinstance(ch, str):

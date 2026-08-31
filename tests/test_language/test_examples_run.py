@@ -58,3 +58,28 @@ def test_example_runs(path: Path) -> None:
     ).evaluate(ast)
 
     assert output, f"{path.name} ran but printed nothing — is it doing anything?"
+
+
+# ── Examples embedded in grammar.py ──────────────────────────────
+# EXAMPLE_BY_NAME is what the GUI's reference panel offers, and nothing ran it.
+# `guard_all` sat broken there after load_id changed to 1-based indexing, while
+# every .hc file on disk kept passing.
+
+from hijaiyyah.language.grammar import EXAMPLE_BY_NAME  # noqa: E402
+
+
+def _source_of(entry: object) -> str:
+    return entry if isinstance(entry, str) else str(getattr(entry, "code", entry))
+
+
+def test_registered_examples_were_found() -> None:
+    assert len(EXAMPLE_BY_NAME) >= 5
+
+
+@pytest.mark.parametrize(
+    "name", sorted(EXAMPLE_BY_NAME), ids=sorted(EXAMPLE_BY_NAME)
+)
+def test_registered_example_runs(name: str) -> None:
+    source = _source_of(EXAMPLE_BY_NAME[name])
+    ast = Parser(Lexer(source).tokenize()).parse()
+    HCEvaluator(print_func=lambda *a: None).evaluate(ast)
