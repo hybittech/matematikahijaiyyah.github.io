@@ -346,6 +346,56 @@ module tb_hcpu_top;
         end
 
         // ═══════════════════════════════════════════════════════
+        //  Program 8: Stack PUSH + POP (LIFO order)
+        // ═══════════════════════════════════════════════════════
+        //  PUSH/POP had no coverage at all, which meant the stack could be
+        //  rewritten without a single test noticing. Pushes three values and
+        //  pops them back; correct LIFO order is the assertion.
+
+        for (i = 0; i < `CODE_DEPTH; i = i + 1)
+            imem[i] = {`OP_NOP, 24'h000000};
+
+        imem[0]  = enc(`OP_MOVI, 4'd1, 4'd0, 4'd0, 12'd11);   // R1 <- 11
+        imem[1]  = enc(`OP_MOVI, 4'd2, 4'd0, 4'd0, 12'd22);   // R2 <- 22
+        imem[2]  = enc(`OP_MOVI, 4'd3, 4'd0, 4'd0, 12'd33);   // R3 <- 33
+        imem[3]  = enc(`OP_NOP,  4'd0, 4'd0, 4'd0, 12'd0);
+        imem[4]  = enc(`OP_PUSH, 4'd0, 4'd1, 4'd0, 12'd0);    // push 11
+        imem[5]  = enc(`OP_PUSH, 4'd0, 4'd2, 4'd0, 12'd0);    // push 22
+        imem[6]  = enc(`OP_PUSH, 4'd0, 4'd3, 4'd0, 12'd0);    // push 33
+        imem[7]  = enc(`OP_NOP,  4'd0, 4'd0, 4'd0, 12'd0);
+        imem[8]  = enc(`OP_POP,  4'd4, 4'd0, 4'd0, 12'd0);    // R4 <- 33
+        imem[9]  = enc(`OP_NOP,  4'd0, 4'd0, 4'd0, 12'd0);
+        imem[10] = enc(`OP_POP,  4'd5, 4'd0, 4'd0, 12'd0);    // R5 <- 22
+        imem[11] = enc(`OP_NOP,  4'd0, 4'd0, 4'd0, 12'd0);
+        imem[12] = enc(`OP_POP,  4'd6, 4'd0, 4'd0, 12'd0);    // R6 <- 11
+        imem[13] = enc(`OP_NOP,  4'd0, 4'd0, 4'd0, 12'd0);
+        imem[14] = enc(`OP_HALT, 4'd0, 4'd0, 4'd0, 12'd0);
+
+        rst_n = 0;
+        repeat (5) @(posedge clk);
+        rst_n = 1;
+
+        cycle_count = 0;
+        while (!halted && cycle_count < 60) begin
+            @(posedge clk);
+            cycle_count = cycle_count + 1;
+        end
+
+        $display("\nProgram 8 (Stack PUSH/POP) halted after %0d cycles", cycle_count);
+        $display("R4 = %0d (expected 33), R5 = %0d (expected 22), R6 = %0d (expected 11)",
+                 u_dut.u_regfile.gpr[4], u_dut.u_regfile.gpr[5], u_dut.u_regfile.gpr[6]);
+
+        if (u_dut.u_regfile.gpr[4] == 32'd33 &&
+            u_dut.u_regfile.gpr[5] == 32'd22 &&
+            u_dut.u_regfile.gpr[6] == 32'd11) begin
+            $display("PASS: stack returned 33, 22, 11 in LIFO order");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("FAIL: stack LIFO order broken");
+            fail_count = fail_count + 1;
+        end
+
+        // ═══════════════════════════════════════════════════════
         $display("\n=============================");
         $display("Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");
