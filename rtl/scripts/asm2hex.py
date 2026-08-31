@@ -28,33 +28,18 @@ import sys
 from pathlib import Path
 
 # ── Opcode table (matching hcpu_pkg.vh) ──────────────────────────
-OPCODES = {
-    "NOP":    0x00,
-    "HALT":   0x01,
-    "MOV":    0x03,
-    "MOVI":   0x04,
-    "ADD":    0x10,
-    "ADDI":   0x11,
-    "SUB":    0x12,
-    "MUL":    0x14,
-    "CMP":    0x20,
-    "CMPI":   0x21,
-    "JMP":    0x22,
-    "JEQ":    0x23,
-    "JNE":    0x24,
-    "JGD":    0x29,
-    "JNGD":   0x2A,
-    "PUSH":   0x32,
-    "POP":    0x33,
-    "LOAD":   0x30,     # NEW: Data RAM load
-    "STORE":  0x31,     # NEW: Data RAM store
-    "HLOAD":  0x40,
-    "HCADD":  0x42,
-    "HGRD":   0x60,
-    "HNRM2":  0x06,
-    "HDIST":  0x07,
-    "PRINT":  0xA0,
-}
+# Opcode values come from the frozen H-ISA, not a fourth copy of the table.
+# This file used to carry its own — it agreed with the RTL, but four hand-kept
+# copies of one encoding is how HLOAD came to mean 0x40 in hardware and 0x01 in
+# software. Only what the HCPU can execute is assembled here; a software-only
+# opcode in a program bound for the FPGA would raise HALT_ERR on the board.
+_SRC = Path(__file__).resolve().parents[2] / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED  # noqa: E402
+
+OPCODES = {op.name: int(op) for op in RTL_IMPLEMENTED}
 
 
 def parse_reg(s: str) -> int:
