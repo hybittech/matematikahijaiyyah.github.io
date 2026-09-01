@@ -171,24 +171,34 @@ Sistem HCPU menangani kendala _load-use_ dan _store-to-load_ secara perangkat ke
 
 #### 10.1.3 Status Sintesis dan Kelayakan Fabrikasi (MPW / ASIC)
 
-HCPU **tersintesis** dan **tersimulasi**, namun **belum siap cetak**. Sintesis generik pertama yang berhasil dijalankan (Yosys, 26 Agustus 2026) memberi angka terukur berikut [CC]:
+HCPU **tersintesis** dan **tersimulasi**, namun **belum siap cetak**. Sintesis generik terhadap gerbang (Yosys, 1 September 2026) memberi angka terukur berikut [CC]:
 
 | Besaran | Terukur | Estimasi tangan terdahulu |
 |---|---|---|
-| Sel logika | **480.795** | ~28.200 |
-| Flip-flop | **143.309** | — |
+| Sel logika | **384.840** | ~28.200 |
+| Flip-flop | **143.112** | — |
 | Luas die | **tidak dapat diturunkan** | ~113.000 μm² |
 
-Selisihnya didominasi satu modul: `hcpu_dataram` menyumbang 416.165 sel — sekitar 87% desain — karena 4096×32 bit dideskripsikan sebagai array register sehingga tersintesis menjadi flip-flop, bukan makro memori. Modul ini tidak ada dalam estimasi tangan terdahulu. Di luar `hcpu_dataram`, desainnya 64.630 sel: masih 2,3× estimasi lama, tetapi pada orde besaran yang sama.
+Selisihnya didominasi satu modul: `hcpu_dataram` menyumbang 270.568 sel karena 4096×32 bit tersintesis menjadi flip-flop, bukan makro memori — tidak ada primitif memori untuk dipetakan pada alur gerbang generik. Modul ini tidak ada dalam estimasi tangan terdahulu.
 
-Beberapa baris estimasi justru bertahan baik — regfile (~15.000 vs 16.486), guard checker (~500 vs 609), UART (~200 vs 89) — sementara `hcpu_rom` jauh di atas perkiraan ke arah sebaliknya (~2.000 vs 109) karena tersintesis sebagai logika kombinasional, bukan penyimpanan.
+Angka ini turun dari 480.795 sel pada run 26 Agustus. Pembacaan yang benar ada pada **perbandingan dua kolomnya**: sel turun 20% sementara flip-flop nyaris tak bergerak (143.309 → 143.112). Sebabnya `hcpu_dataram` dan stack `hcpu_memory` diubah dari baca kombinasional ke baca teregistrasi. Baca asinkron menuntut pohon multiplexer selebar seluruh array; meregistrasinya menghapus pohon itu — itulah 96.000 sel — tetapi penyimpanannya tidak punya tujuan yang lebih baik di alur ini.
+
+Terhadap pustaka memori sungguhan, perubahan yang sama memberi separuh cerita yang lain. Disintesis untuk Tang Nano 9K (`synth_gowin`, top `hcpu_gowin_top`), array-nya kini terpetakan ke block RAM:
+
+| Sumber daya | Terpakai | Kapasitas |
+|---|---|---|
+| LUT | 3.053 | 8.640 |
+| Flip-flop | 1.646 | 6.480 |
+| Blok BSRAM | 4 | 26 |
+
+Jadi perbaikannya bekerja; laporan gerbang generik hanya tidak bisa melihatnya. Setiap angka ASIC membawa peringatan yang sama sampai desainnya disintesis terhadap PDK dengan makro SRAM.
 
 **Konsekuensi terhadap klaim fabrikasi.** Tidak ada PDK SKY130 terpasang pada run tersebut, sehingga angkanya adalah hitungan gerbang generik, bukan sel standar terpetakan; **tidak ada luas μm² maupun timing ns yang dapat diturunkan darinya**. Lebih jauh, 131.072 flip-flop tidak akan muat pada area pengguna 700×700 μm yang ditetapkan `config.json`. Karena itu klaim luas die dan kesiapan _Efabless Open MPW — SkyWater SKY130_ **ditahan** [EH] sampai data RAM dipetakan ke makro SRAM dan sintesis dijalankan ulang terhadap PDK sungguhan. Angka lengkap: `rtl/mpw/hcpu_synth_report.txt`.
 
 **Properti yang tetap terverifikasi** [CC]:
 - HCPU adalah desain _Single Clock Domain_, menihilkan masalah _Cross-Domain Clocking (CDC)_.
-- Lima _testbench_ Icarus Verilog (`rtl/tb/`) melaporkan **204 assertion PASS, 0 FAIL**: ROM 30, Guard 34, Codex ALU 6, HISAB 124, integrasi _top-level_ 10 — mencakup penyapuan penuh 28 huruf terhadap ROM dan guard.
-- Jalur topologis terpanjang: 84 tingkat logika, melalui operasi bagi dan modulo-10 pada FSM PRINT (`hcpu_top.v:193-194`). Ini persoalan _timing_, bukan luas.
+- Lima _testbench_ Icarus Verilog (`rtl/tb/`) melaporkan **205 assertion PASS, 0 FAIL**: ROM 30, Guard 34, Codex ALU 6, HISAB 124, integrasi _top-level_ 11 — mencakup penyapuan penuh 28 huruf terhadap ROM dan guard, serta round-trip LIFO stack.
+- Jalur topologis terpanjang: 86 tingkat logika, melalui operasi bagi dan modulo-10 pada FSM PRINT (`hcpu_top.v:193-194`) — jalur yang sama dengan run sebelumnya. Ini persoalan _timing_, bukan luas. Pengganti shift-add buatan tangan sudah dicoba dan terukur lebih buruk pada kedua metrik, karena Yosys sudah menurunkan pembagian oleh konstanta menjadi rangkaian yang lebih baik.
 
 ### 10.2 Realisasi Fotonik (Studi Kelayakan)
 

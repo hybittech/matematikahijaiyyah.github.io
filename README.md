@@ -254,11 +254,18 @@ Dinyatakan apa adanya, dengan label epistemik.
 
 ### Catatan sintesis
 
-Sintesis generik pertama yang berhasil dijalankan menghasilkan **480.795 sel dan
-143.309 flip-flop** — jauh di atas estimasi tangan terdahulu (~28.200 gerbang).
-Penyebab dominan: `hcpu_dataram` menyumbang 416.165 sel karena 4096×32 bit
-tersintesis sebagai array register, bukan makro memori. Di luar modul itu,
-desainnya 64.630 sel.
+Sintesis generik terhadap gerbang menghasilkan **384.840 sel dan 143.112
+flip-flop** — jauh di atas estimasi tangan terdahulu (~28.200 gerbang).
+Penyebab dominan: `hcpu_dataram` menyumbang 270.568 sel karena 4096×32 bit
+tersintesis sebagai flip-flop; alur gerbang generik tidak punya primitif
+memori untuk memetakannya.
+
+Angka itu turun dari 480.795 sel setelah `hcpu_dataram` dan stack `hcpu_memory`
+diubah ke baca teregistrasi. Yang perlu dibaca adalah selisihnya: sel turun 20%
+sementara flip-flop nyaris tak bergerak — pohon multiplexer baca yang hilang,
+bukan penyimpanannya. Terhadap pustaka memori sungguhan efeknya terlihat penuh:
+disintesis untuk Tang Nano 9K, desainnya memakai **3.053 LUT dari 8.640** dan
+**1.646 flip-flop dari 6.480**, dengan array-nya di block RAM.
 
 Karena itu klaim luas die dan kesiapan MPW **ditahan** sampai data RAM dipetakan
 ke makro SRAM dan sintesis dijalankan ulang terhadap PDK sungguhan. Angka
