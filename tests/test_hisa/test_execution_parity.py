@@ -194,6 +194,100 @@ PROGRAMS: Dict[str, List[int]] = {
         *(enc(OpCode.HLOAD, dst=i % HREG_COUNT, imm=i + 1) for i in range(28)),
         enc(OpCode.HALT),
     ],
+
+    # ── The twelve opcodes the HVM gained ───────────────────────
+
+    "move_and_immediate": [
+        enc(OpCode.MOVI, dst=1, imm=100),
+        enc(OpCode.MOVI, dst=2, imm=4095),      # widest 12-bit immediate
+        enc(OpCode.MOV, dst=3, s1=2),
+        enc(OpCode.NOP),
+        enc(OpCode.HALT),
+    ],
+    "integer_arithmetic": [
+        enc(OpCode.MOVI, dst=1, imm=300),
+        enc(OpCode.MOVI, dst=2, imm=7),
+        enc(OpCode.ADD, dst=3, s1=1, s2=2),
+        enc(OpCode.SUB, dst=4, s1=1, s2=2),
+        enc(OpCode.MUL, dst=5, s1=1, s2=2),
+        enc(OpCode.HALT),
+    ],
+    "add_immediate_signed": [
+        enc(OpCode.MOVI, dst=1, imm=10),
+        enc(OpCode.ADDI, dst=2, s1=1, imm=5),
+        # 0xFFE is -2 once sign-extended; a zero-extended reading gives 4094.
+        enc(OpCode.ADDI, dst=3, s1=1, imm=0xFFE),
+        enc(OpCode.HALT),
+    ],
+    "subtraction_wraps_at_32_bits": [
+        enc(OpCode.MOVI, dst=1, imm=1),
+        enc(OpCode.MOVI, dst=2, imm=5),
+        enc(OpCode.SUB, dst=3, s1=1, s2=2),     # 1 - 5 wraps to 0xFFFFFFFC
+        enc(OpCode.HALT),
+    ],
+    "compare_sets_flags": [
+        enc(OpCode.MOVI, dst=1, imm=42),
+        enc(OpCode.MOVI, dst=2, imm=42),
+        enc(OpCode.CMP, s1=1, s2=2),
+        enc(OpCode.HALT),
+    ],
+    "compare_immediate": [
+        enc(OpCode.MOVI, dst=1, imm=9),
+        enc(OpCode.CMPI, s1=1, imm=9),
+        enc(OpCode.HALT),
+    ],
+    "store_then_load": [
+        enc(OpCode.MOVI, dst=1, imm=1234),
+        enc(OpCode.MOVI, dst=2, imm=64),        # base address
+        enc(OpCode.NOP),
+        enc(OpCode.STORE, s1=1, s2=2, imm=3),   # MEM[R2+3] <- R1
+        enc(OpCode.MOVI, dst=1, imm=0),
+        enc(OpCode.NOP),
+        enc(OpCode.LOAD, dst=5, s1=2, imm=3),   # R5 <- MEM[R2+3]
+        enc(OpCode.NOP),
+        enc(OpCode.HALT),
+    ],
+    "backward_branch_loop": [
+        # Straight from tb_hcpu_top.v Program 3. Branch targets are
+        # PC-relative: 0xFFE is -2, back to the ADDI.
+        enc(OpCode.MOVI, dst=0, imm=0),
+        enc(OpCode.MOVI, dst=1, imm=3),
+        enc(OpCode.ADDI, dst=0, s1=0, imm=1),
+        enc(OpCode.CMP, s1=0, s2=1),
+        enc(OpCode.JNE, imm=0xFFE),
+        enc(OpCode.HALT),
+    ],
+    "forward_branch_taken": [
+        enc(OpCode.MOVI, dst=1, imm=1),
+        enc(OpCode.MOVI, dst=2, imm=1),
+        enc(OpCode.CMP, s1=1, s2=2),
+        enc(OpCode.JEQ, imm=3),                 # skip the next two
+        enc(OpCode.MOVI, dst=7, imm=999),       # must not run
+        enc(OpCode.MOVI, dst=8, imm=888),       # must not run
+        enc(OpCode.MOVI, dst=9, imm=5),
+        enc(OpCode.HALT),
+    ],
+    "branch_on_guard": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.HGRD, s1=0),
+        enc(OpCode.JGD, imm=2),                 # guard passes, skip one
+        enc(OpCode.MOVI, dst=6, imm=111),       # must not run
+        enc(OpCode.MOVI, dst=7, imm=222),
+        enc(OpCode.HALT),
+    ],
+    "branch_on_guard_not_taken": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.HGRD, s1=0),
+        enc(OpCode.JNGD, imm=2),                # guard passes, so no jump
+        enc(OpCode.MOVI, dst=6, imm=111),       # must run
+        enc(OpCode.HALT),
+    ],
+    "hisab_pack_and_crc": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.HPACK, dst=1, s1=0),
+        enc(OpCode.HCRC, dst=2, s1=0),
+        enc(OpCode.HALT),
+    ],
 }
 
 
