@@ -1,9 +1,9 @@
 """Tests for .hgeo format — Bab III §3.26."""
 
-import json
 import os
 import tempfile
-from hijaiyyah.core.hgeo import HgeoFile, write_hgeo, read_hgeo
+
+from hijaiyyah.core.hgeo import HgeoFile, read_hgeo, write_hgeo
 from hijaiyyah.core.master_table import MASTER_TABLE
 
 

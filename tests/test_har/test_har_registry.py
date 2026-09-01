@@ -1,9 +1,10 @@
 """Tests for HAR — Alphabet Registry."""
 
 import pytest
+
 from hijaiyyah.har import (
-    HARRegistry,
     HAREntry,
+    HARRegistry,
     HARStatus,
     HARValidation,
 )

@@ -676,7 +676,7 @@ for ch in "بسم" {
     println(ch);
 }
 
-for i in 0..28 {
+for i in 1..=28 {
     println(i);
 }
 
@@ -962,13 +962,15 @@ yang dapat dipanggil dengan sintaks dot-notation.
 | Fungsi | Deskripsi |
 |---|---|
 | `load(ch)` | Muat codex huruf dari $\mathcal{H}_{28}$ |
-| `load14(ch)` | Muat codex 14D |
-| `load_id(idx)` | Muat codex berdasarkan index (1–28) |
+| `load_id(idx)` | Muat codex berdasarkan index huruf, 1–28 |
 | `zero()` | Vektor nol 18D |
-| `zero14()` | Vektor nol 14D |
-| `hybit(arr)` | Buat hybit dari array 18 integer |
 | `identify(vec)` | Identifikasi huruf dari vektor |
 | `is_hijaiyyah(ch)` | Cek apakah karakter termasuk $\mathcal{H}_{28}$ |
+
+> `load14`, `zero14`, dan `hybit` pernah tercantum di sini tetapi tidak
+> pernah diimplementasi. Keduanya dihapus agar daftar ini menggambarkan
+> fungsi yang benar-benar dapat dipanggil;
+> `tests/test_language/test_docs_builtins.py` menjaganya tetap begitu.
 
 ### 13.2 Output
 
@@ -988,6 +990,9 @@ yang dapat dipanggil dengan sintaks dot-notation.
 
 | Fungsi | Deskripsi |
 |---|---|
+| `len(x)` | Panjang string atau array |
+| `abs(x)` | Nilai mutlak |
+| `sqrt(x)` | Akar kuadrat (float) |
 | `now()` | Timestamp saat ini (placeholder) |
 
 ---
@@ -1250,41 +1255,77 @@ fn kodeks_kata(teks: string) -> hybit {
 ### 18.1 Menjalankan Program
 
 ```bash
-# Dari HOM GUI (tab HC IDE)
-# ketik/muat kode → klik Evaluate
+hc run program.hc       # jalankan
+hc check program.hc     # parse saja, laporkan galat tanpa mengeksekusi
+hc repl                 # sesi interaktif
+hc lsp                  # language server, lewat stdin/stdout
+```
 
-# Dari command line (melalui HCVM)
-python hcvm.py program.hc
+`hc` terpasang bersama paketnya (`pip install -e .`).
 
-# Dari Python API
-python -c "
-from hijaiyyah.language import Lexer, Parser
+`hc check` menerima banyak berkas sekaligus, sehingga cocok untuk pre-commit
+hook atau CI:
+
+```bash
+hc check examples/*.hc docs/examples/*.hc
+```
+
+Program juga dapat dievaluasi dari Python bila diperlukan — misalnya untuk
+menangkap keluaran alih-alih mencetaknya:
+
+```python
+from hijaiyyah.language.lexer import Lexer
+from hijaiyyah.language.parser import Parser
 from hijaiyyah.language.evaluator import HCEvaluator
 
-source = open('program.hc').read()
-tokens = Lexer(source).tokenize()
-ast = Parser(tokens).parse()
-evaluator = HCEvaluator()
-evaluator.evaluate(ast)
-"
+lines = []
+ast = Parser(Lexer(open("program.hc").read()).tokenize()).parse()
+HCEvaluator(print_func=lambda *a: lines.append(" ".join(map(str, a)))).evaluate(ast)
 ```
 
 ### 18.2 Tooling yang Tersedia
 
 | Tool | Fungsi |
 |---|---|
-| **HOM HC IDE** | Editor + evaluator + reference panel |
+| **`hc`** | CLI: run, check, repl, language server |
+| **Ekstensi VS Code** | Pewarnaan sintaks + diagnostik langsung (`editors/vscode/`) |
+| **HOM HC IDE** | Editor + evaluator + panel rujukan |
 | **HCVM** | Virtual machine mandiri |
-| **Bytecode Inspector** | Decoder H-ISA real-time |
-| **H-ISA Machine** | CPU state viewer |
+| **Bytecode Inspector** | Decoder H-ISA waktu nyata |
+| **H-ISA Machine** | Penampil keadaan CPU |
 
-### 18.3 Debugging
+Ekstensi VS Code dipasang dengan menautkannya ke direktori ekstensi:
 
-HC v1.0 menyediakan diagnostik dasar:
-- syntax error dengan posisi baris/kolom,
-- runtime error dengan pesan deskriptif,
-- `println()` untuk output debugging,
-- AST viewer di HOM GUI.
+```bash
+ln -s "$(pwd)/editors/vscode" ~/.vscode/extensions/hc-hijaiyyah
+```
+
+Pewarnaan sintaks berjalan tanpa apa pun terpasang. Diagnostik langsung
+menuntut `hc` ada di PATH; tanpa itu ekstensi memberi tahu sekali lalu tetap
+mewarnai.
+
+### 18.3 Diagnostik
+
+Galat leksikal dan sintaksis dilaporkan dengan kutipan sumber dan penunjuk
+kolom:
+
+```
+error: Unexpected token in expression (got SEMICOLON ';')
+ --> program.hc:2:9
+  |
+2 | let b = ;
+  |         ^
+  help: declare it first with `let`
+```
+
+Galat semantik — variabel tak dikenal, fungsi stdlib salah eja — tidak membawa
+posisi, sehingga ditampilkan tanpa kutipan sumber alih-alih menunjuk lokasi
+yang belum tentu benar.
+
+Language server melaporkan galat parse selagi diketik. Galat semantik baru
+muncul saat program dijalankan, karena evaluator belum menyimpan posisi.
+
+Selain itu tersedia `println()` untuk penelusuran, dan penampil AST di HOM GUI.
 
 ---
 
@@ -1305,18 +1346,33 @@ HC v1.0 menyediakan diagnostik dasar:
 | Tidak ada package manager | belum ada hcpm |
 | Sandbox belum ketat | jangan jalankan kode tidak dipercaya |
 
-### 19.2 Rencana v1.1 **[PLANNED]**
+### 19.2 Sudah Terkirim
+
+Tiga butir berikut semula tercantum sebagai rencana v1.1 dan v2.0, dan kini
+sudah tersedia:
+
+```
+☑ improved diagnostics      kutipan sumber + penunjuk kolom (§18.3)
+☑ syntax highlighting       ekstensi VS Code (editors/vscode/)
+☑ LSP                       hc lsp — diagnostik, hover, completion
+```
+
+Selain itu, tiga celah yang membuat program biasa tak dapat ditulis sudah
+ditutup: pernyataan penugasan (`x = 2`, dengan `let mut`), pemutus baris di
+dalam kurung, dan evaluasi literal array. Ketiganya sudah tercantum di grammar
+formal sejak awal tetapi belum diimplementasi.
+
+### 19.3 Rencana v1.1 **[PLANNED]**
 
 ```
 □ try / catch error handling
 □ struct dan enum
 □ file I/O dasar
 □ package manifest (hc.toml)
-□ improved diagnostics
-□ syntax highlighting spec
+□ posisi pada galat semantik      agar dapat dilaporkan selagi diketik
 ```
 
-### 19.3 Rencana v2.0 **[PLANNED]**
+### 19.4 Rencana v2.0 **[PLANNED]**
 
 ```
 □ closures dan higher-order functions
@@ -1325,7 +1381,6 @@ HC v1.0 menyediakan diagnostik dasar:
 □ async primitives
 □ network module
 □ WebAssembly target
-□ LSP (Language Server Protocol)
 □ hcpm package manager
 ```
 

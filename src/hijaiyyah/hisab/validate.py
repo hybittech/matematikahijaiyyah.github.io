@@ -12,6 +12,7 @@ import struct
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
+from ..core.guards import compute_U
 from .digest import compute_digest
 from .protocol import (
     DIGEST_SIZE,
@@ -142,7 +143,7 @@ def _validate_guard(v: Sequence[int]) -> List[ValidationResult]:
     """Level 2: guard checks G1–G4, T1–T2 on deserialized v18."""
     results: List[ValidationResult] = []
 
-    U = v[10] + v[11] + v[12] + 4 * v[13]
+    U = compute_U(v)
     rho = v[0] - U
 
     # G1: ρ ≥ 0

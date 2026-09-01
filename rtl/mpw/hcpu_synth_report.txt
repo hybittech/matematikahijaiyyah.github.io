@@ -2,68 +2,115 @@ HCPU — Yosys Generic Synthesis Report
 =====================================
 Tool      : Yosys 0.68+post
 Script    : rtl/mpw/synth_hcpu.ys
-Flow      : hierarchy -top hcpu_top -chparam USE_DSP 0 ; synth ; stat
+Flow      : hierarchy -top hcpu_top -chparam USE_DSP 0 ; synth -flatten ; abc
 Library   : generic gates (no PDK installed — see "Caveats")
-Date      : 2026-08-26
+Date      : 2026-09-01
 
 MEASURED — total design
 -----------------------
-  Cells        480,795
-  Flip-flops   143,309
+  Cells        384,840
+  Flip-flops   143,112
+
+Against the run of 2026-08-26
+-----------------------------
+                        2026-08-26   2026-09-01     change
+  Cells                    480,795      384,840    -95,955
+  Flip-flops               143,309      143,112       -197
+  Longest topological path      84           86         +2
+
+The earlier run predates the memory rewrite in hcpu_dataram.v and
+hcpu_memory.v, where both arrays moved from a combinational read to a
+registered one. Read the two columns together: cells fall by 20% while
+flip-flops barely move, and that split is the whole result.
+
+An asynchronous read needs a multiplexer tree wide enough to select any
+word in the array. Registering the read deletes that tree — which is the
+96,000 cells — but the storage itself has nowhere better to go in this
+flow, because no memory primitive exists to map it to. Generic gates
+offer flip-flops and nothing else.
+
+The same change measured against a real memory library tells the other
+half. Synthesised for the Tang Nano 9K (synth_gowin, top =
+hcpu_gowin_top), the design now maps its arrays to block RAM:
+
+  LUT           3,053  of  8,640
+  Flip-flops    1,646  of  6,480
+  BSRAM blocks      4  of     26
+
+So the fix works; this report simply cannot see it. Any ASIC number
+below carries the same caveat until the design is synthesised against a
+PDK with an SRAM macro.
 
 Per module (local count, excluding submodules)
 ----------------------------------------------
-  Module                     Cells        FF     Prior estimate
+Measured before technology mapping, so these sum to less than the total
+above; ABC's optimisation runs after.
+
+  Module                     Cells        FF     2026-08-26 cells
   ------------------------------------------------------------
-  hcpu_dataram             416,165   131,072     (not estimated)
-  hcpu_memory (stack)       25,480     8,392     ~4,000
-  hcpu_regfile              16,486     2,920     ~15,000
-  hcpu_codex_alu            12,135         0     ~4,000
-  hcpu_mul                   2,964         0     (not estimated)
-  hcpu_execute               2,687       249     ~2,500 (pipeline)
-  hcpu_hisab                 1,263         0     (not estimated)
-  hcpu_decode                1,061       427       "
-  hcpu_forward                 740         0       "
-  hcpu_top                     700        95       "
-  hcpu_guard                   609         0     ~500
-  hcpu_fetch                   294       129     (pipeline)
-  hcpu_rom                     109         0     ~2,000
-  hcpu_uart_tx                  89        23     ~200
-  hcpu_controller               13         2     ~500
+  hcpu_dataram             270,568   131,104     416,165
+  hcpu_memory (stack)       17,443     8,427      25,480
+  hcpu_regfile              16,491     2,920      16,486
+  hcpu_codex_alu            15,069         0      12,135
+  hcpu_top                   7,093       133         700
+  hcpu_hisab                 2,761         0       1,263
+  hcpu_decode                1,558       427       1,061
+  hcpu_forward                 744         0         740
+  hcpu_fetch                   510       129         294
+  hcpu_rom                     107         0         109
+  hcpu_controller               17         2          13
+  hcpu_writeback                 0         0           0
   ------------------------------------------------------------
-  TOTAL                    480,795   143,309     ~28,200
+  TOTAL                    332,361   143,142
 
 Reading the numbers
 -------------------
-1. hcpu_dataram dominates: 4096 words x 32 bits = 131,072 bits, inferred as
-   flip-flops because the RTL describes a register array rather than a memory
-   macro. This single module is ~87% of the design and was absent from the
-   earlier hand estimate.
+1. hcpu_dataram still dominates at 4096 words x 32 bits = 131,072 bits,
+   and still becomes flip-flops here for want of a memory macro. Its
+   cell count fell 35% (416,165 -> 270,568) with the flip-flop count
+   unchanged: that is the read multiplexer leaving, not the storage.
 
-2. Excluding hcpu_dataram, the design is 64,630 cells — still 2.3x the ~28,200
-   estimate, but the same order of magnitude.
+2. hcpu_memory's stack behaved the same way — 25,480 -> 17,443 cells
+   over 8,4xx flip-flops. Both arrays were changed for the same reason
+   and moved the same way.
 
-3. Several estimate lines held up well: regfile (~15,000 vs 16,486), guard
-   checker (~500 vs 609), UART (~200 vs 89). hcpu_rom was over-estimated
-   (~2,000 vs 109) because it synthesizes as combinational logic, not storage.
-   hcpu_codex_alu was under-estimated by ~3x.
+3. hcpu_codex_alu grew (12,135 -> 15,069) and hcpu_top grew sharply
+   (700 -> 7,093). The top-level figure is the larger part of the
+   difference and is a boundary effect: this run counts modules before
+   technology mapping, where the earlier one counted after, so logic
+   that ABC later hoists or absorbs is still attributed to hcpu_top.
+   Treat the per-module column as indicative and the design total as
+   the measurement.
 
-4. Longest topological path: 84 logic levels, running through the divide- and
-   modulo-by-10 at hcpu_top.v:193-194 (decimal conversion in the PRINT FSM).
-   This is the critical path and is a timing concern, not an area one —
-   hcpu_top is only 700 cells.
+4. Longest topological path: 86 logic levels, from \print_val — the
+   divide- and modulo-by-10 in the PRINT FSM at hcpu_top.v:193-194,
+   the same path the previous run found. It is a timing concern, not
+   an area one.
+
+   A hand-written shift-add reciprocal was tried in its place and
+   measured worse on both counts under synth_gowin: 10,836 LUTs against
+   8,871, and a longest path of 1,149 against 927. Yosys already lowers
+   division by a constant into a better circuit than the textbook
+   trick, so the obvious optimisation is a pessimisation. The `/ 10`
+   and `% 10` stay, and hcpu_top.v carries a comment saying why.
 
 Caveats
 -------
-* No SKY130 PDK is installed, so these are generic-gate counts, not mapped
-  standard cells, and no um^2 area or ns timing can be derived from this run.
-  Cell counts are indicative of relative size only.
-* Any die-area figure requires re-running with a liberty file
-  (sky130_fd_sc_hd) and, for the memories, an SRAM macro.
+* No SKY130 PDK is installed, so these are generic-gate counts, not
+  mapped standard cells, and no um^2 area or ns timing can be derived
+  from this run. Cell counts are indicative of relative size only.
+* Any die-area figure requires re-running with a liberty file.
+* 131,072 flip-flops will not fit the 700x700 um user area in
+  config.json. That remains true, and remains the reason claims of MPW
+  readiness are withheld.
+* Re-run against the real PDK to obtain area and timing closure. The
+  first step is mapping hcpu_dataram to an SRAM macro from the
+  foundry's memory compiler; until then this report measures a design
+  that stores 16 KB in flip-flops.
 
-Before a tape-out attempt
--------------------------
-* Data RAM must become an SRAM macro (e.g. OpenRAM on SKY130) or shrink.
-  131,072 flip-flops will not fit the 700x700 um user area in config.json.
-  The same applies to hcpu_memory's 256x32 stack.
-* Re-run against the real PDK to obtain area and timing closure.
+Reproducing
+-----------
+  cd rtl/mpw && yosys -s synth_hcpu.ys
+
+The script overwrites this file with raw `stat` output. This document is
+written from that output by hand; regenerate it the same way.

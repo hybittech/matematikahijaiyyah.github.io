@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 from dataclasses import dataclass, field
@@ -19,9 +18,8 @@ _SRC = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 from hijaiyyah.core.codex_entry import CodexEntry  # noqa: E402
-from hijaiyyah.core.guards import guard_check  # noqa: E402
+from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
 
 try:
     import numpy as np
@@ -256,7 +254,7 @@ def process_letter(
     if glyph_dir:
         glyph_path = Path(glyph_dir) / f"{entry.index}.png"
     else:
-        glyph_path = _ROOT / "data" / "kfgqpc_seal" / "glyphs" / f"{entry.index}.png"
+        glyph_path = _ROOT / "data" / "kfgqpc" / "glyphs" / f"{entry.index}.png"
 
     if not glyph_path.exists():
         result.error = f"Not found: {glyph_path}"

@@ -24,7 +24,7 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 from typing import Dict, List, Optional
 
-from ...core.guards import guard_check
+from ...core.guards import compute_U, guard_check
 from ...core.master_table import MasterTable
 from ...core.rom import pack_rom, rom_sha256
 from ...integrity.injectivity import InjectivityVerifier
@@ -435,11 +435,13 @@ class ReleaseTab:
             tag = "pass" if ok else "fail"
             status = "PASS ✓" if ok else "FAIL ✗"
             dots = "." * max(1, 40 - len(name))
-            self._out.writeln(
+            out = self._out
+            assert out is not None, "_out is created before any check runs"
+            out.writeln(
                 f"  [{checks_total:02d}] {name} {dots} {status}  ({elapsed:.0f}ms)", tag
             )
             if detail:
-                self._out.writeln(f"       {detail}", "dim" if ok else "fail")
+                out.writeln(f"       {detail}", "dim" if ok else "fail")
 
         # ── Layer 1: File Integrity
         self._out.writeln("  LAYER 1: FILE INTEGRITY", "section")
@@ -515,7 +517,6 @@ class ReleaseTab:
             return False, str(e)
 
     def _verify_turning(self, entries):
-        from ...core.guards import compute_U
 
         total_t = sum(e.vector[0] for e in entries)
         total_u = sum(compute_U(list(e.vector)) for e in entries)
@@ -808,6 +809,4 @@ class ReleaseTab:
             self._status_var.set(f"Exported: {os.path.basename(path)}")
 
 
-def compute_U(v):
-    """Local helper to avoid circular import issues."""
-    return v[10] + v[11] + v[12] + 4 * v[13]
+

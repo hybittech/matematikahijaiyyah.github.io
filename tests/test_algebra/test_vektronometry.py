@@ -1,7 +1,5 @@
 """Tests for Field 1: Vectronometry (Bab II-A, Ch 17-21)."""
 
-import math
-import pytest
 
 
 class TestPrimitiveRatios:

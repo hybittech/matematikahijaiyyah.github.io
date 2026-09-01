@@ -146,7 +146,10 @@ module tb_guard;
         $display("Guard Tests: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("========================================");
 
-        if (fail_count > 0) $finish(1);
+        // $finish(1) sets the diagnostic message level, not the exit status —
+        // vvp still returns 0, so a failing run would look green to CI.
+        // $fatal is what actually exits non-zero.
+        if (fail_count > 0) $fatal(1, "%0d test(s) FAILED", fail_count);
         else $finish(0);
     end
 

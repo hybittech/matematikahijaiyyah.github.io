@@ -67,7 +67,7 @@ def guard_check(v: Any) -> bool:
     vec = _to_vec(v)
 
     # Structural guards
-    U = vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    U = compute_U(vec)
     rho = vec[0] - U
 
     g1 = vec[14] == vec[1] + vec[2] + vec[3]
@@ -92,7 +92,7 @@ def full_guard_check(v: Any) -> Dict[str, bool]:
     """
     vec = _to_vec(v)
 
-    U = vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    U = compute_U(vec)
     rho = vec[0] - U
 
     g1 = vec[14] == vec[1] + vec[2] + vec[3]
@@ -120,14 +120,14 @@ def guard_detail(v: Any) -> Dict[str, Any]:
     """
     vec = _to_vec(v)
 
-    U = vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    U = compute_U(vec)
     rho = vec[0] - U
 
     R1 = (vec[0] == U + rho) and (rho >= 0)
     R2 = vec[14] == vec[1] + vec[2] + vec[3]
     R3 = vec[15] == vec[4] + vec[5] + vec[6] + vec[7] + vec[8]
     R4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
-    R5 = U == vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    R5 = U == compute_U(vec)
 
     # Topological guards
     T1 = vec[13] >= 1 if vec[6] > 0 else True

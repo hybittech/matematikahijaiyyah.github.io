@@ -19,40 +19,25 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import Any, List, Optional, Tuple
 
+from hijaiyyah.assembler import HBC_MAGIC_INT, HBCHeader
+
+# hisa.hcheck exports HCHECK, not HCheck, and its scan() takes raw v18
+# vectors where this class works in HybitRegister objects. The delegation
+# below asked for a .check() method that HCHECK does not have, so it could
+# never have fired even with the name spelled correctly. The implementation
+# in this file is the one that runs.
+# core.guards exports guard_check, full_guard_check and guard_detail — there
+# has never been a check_guards or a GuardResult. The guarded import failed
+# silently, so GuardSystem fell back to its own copy of G1-G4 and T1-T2.
+from hijaiyyah.core.guards import compute_U, full_guard_check
+from hijaiyyah.core.master_table import MASTER_TABLE
+
 # ── Re-export existing implementations ────────────────────────
-
-try:
-    from hijaiyyah.hisa.machine import HISAMachine as _Machine
-except ImportError:
-    _Machine = None
-
-try:
-    from hijaiyyah.hisa.hcheck import HCheck as _HCheck
-except ImportError:
-    _HCheck = None
-
-try:
-    from hijaiyyah.core.guards import (
-        GuardResult as _GuardResult,
-    )
-    from hijaiyyah.core.guards import (
-        check_guards as _check_guards,
-    )
-except ImportError:
-    _check_guards = None
-    _GuardResult = None
-
-try:
-    from hijaiyyah.core.master_table import MASTER_TABLE
-except ImportError:
-    MASTER_TABLE = None
-
-try:
-    from hijaiyyah.assembler import HBC_MAGIC_INT, HBCHeader
-except ImportError:
-    HBCHeader = None
-    HBC_MAGIC_INT = 0x48425954
-
+# First-party and always importable — the try/except that used to wrap this
+# guarded against nothing, and assigning None to a class name is what mypy
+# was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
+# every remaining guarded import honest.
+from hijaiyyah.hisa.machine import HISAMachine as _Machine
 
 # ── Register & flags ──────────────────────────────────────────
 
@@ -115,49 +100,25 @@ class GuardSystem:
     """
 
     def check(self, v18: List[int]) -> GuardStatus:
-        """Validate a single hybit vector."""
-        if _check_guards is not None:
-            try:
-                result = _check_guards(v18)
-                if hasattr(result, 'passed'):
-                    return GuardStatus(
-                        passed=result.passed,
-                        failed_guards=getattr(result, 'failed', [])
-                    )
-                return GuardStatus(passed=bool(result))
-            except Exception:
-                pass
-        return self._check_direct(v18)
+        """
+        Validate a single hybit vector.
 
-    def _check_direct(self, v: List[int]) -> GuardStatus:
-        """Direct guard implementation."""
-        if len(v) < HYBIT_DIM:
+        Delegates to core.guards.full_guard_check, which is the definition the
+        RTL, the JavaScript engine and the language all diff against. This
+        class used to carry its own transcription of G1-G4 and T1-T2 because
+        the import above was reaching for a name that does not exist.
+        """
+        if len(v18) < HYBIT_DIM:
             return GuardStatus(False, ["DIMENSION"])
 
-        fails = []
-        # G1: A_N = N_a + N_b + N_d
-        if v[14] != v[1] + v[2] + v[3]:
-            fails.append("G1")
-        # G2: A_K = K_p + K_x + K_s + K_a + K_c
-        if v[15] != v[4] + v[5] + v[6] + v[7] + v[8]:
-            fails.append("G2")
-        # G3: A_Q = Q_p + Q_x + Q_s + Q_a + Q_c
-        if v[16] != v[9] + v[10] + v[11] + v[12] + v[13]:
-            fails.append("G3")
-        # G4: ρ = Θ̂ − (Q_x + Q_s + Q_a + 4·Q_c) ≥ 0
-        U = v[10] + v[11] + v[12] + 4 * v[13]
-        if v[0] < U:
-            fails.append("G4")
-        # T1: K_s > 0 ⇒ Q_c ≥ 1
-        if v[6] > 0 and v[13] < 1:
-            fails.append("T1")
-        # T2: K_c > 0 ⇒ Q_c ≥ 1
-        if v[8] > 0 and v[13] < 1:
-            fails.append("T2")
-
+        results = full_guard_check(v18)
         return GuardStatus(
-            passed=len(fails) == 0,
-            failed_guards=fails,
+            passed=results["all_pass"],
+            failed_guards=[
+                name
+                for name in ("G1", "G2", "G3", "G4", "T1", "T2")
+                if not results[name]
+            ],
         )
 
 
@@ -178,17 +139,10 @@ class HCheck:
 
     def __init__(self):
         self._guard = GuardSystem()
-        self._base = _HCheck() if _HCheck else None
 
     def scan(self, registers: List[HybitRegister],
              stack: Optional[List] = None) -> HCheckResult:
         """Scan all registers and stack for corruption."""
-        if self._base and hasattr(self._base, 'check'):
-            try:
-                return self._base.check(registers)
-            except Exception:
-                pass
-
         failures = []
         for i, reg in enumerate(registers):
             if reg.has_hybit:
@@ -241,7 +195,7 @@ class HybitEngine:
     def decompose(self, v: List[int]) -> Tuple[int, int]:
         """HDCMP: decompose into (U, ρ)."""
         theta = v[0]
-        U = v[10] + v[11] + v[12] + 4 * v[13]
+        U = compute_U(v)
         rho = theta - U
         return U, rho
 
@@ -251,7 +205,7 @@ class HybitEngine:
 
     def dist(self, a: List[int], b: List[int]) -> float:
         """HDIST: Euclidean distance."""
-        return sum((a[i] - b[i]) ** 2 for i in range(14)) ** 0.5
+        return float(sum((a[i] - b[i]) ** 2 for i in range(14)) ** 0.5)
 
 
 # ── HVM — Main Virtual Machine ───────────────────────────────

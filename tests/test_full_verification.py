@@ -11,22 +11,18 @@ All values derived from MasterTable HM-28-v1.0-HC18D.
 
 from __future__ import annotations
 
-import math
-from itertools import combinations
-from typing import Any, Dict, List, Tuple
+from typing import Any, ClassVar, Dict, List, Tuple
 
 import pytest
 
-from hijaiyyah.core.master_table import MASTER_TABLE
-from hijaiyyah.core.codex_entry import CodexEntry
-from hijaiyyah.core.guards import guard_check, guard_detail, compute_U, compute_rho
-from hijaiyyah.core.exomatrix import build_exomatrix
-from hijaiyyah.algebra import vektronometry as vec
-from hijaiyyah.algebra import normivektor as diff_mod
 from hijaiyyah.algebra import aggregametric as integ
-from hijaiyyah.algebra import intrametric as geo
 from hijaiyyah.algebra import exometric as exo
-
+from hijaiyyah.algebra import intrametric as geo
+from hijaiyyah.algebra import normivektor as diff_mod
+from hijaiyyah.algebra import vektronometry as vec
+from hijaiyyah.core.codex_entry import CodexEntry
+from hijaiyyah.core.guards import compute_rho, compute_U, guard_check, guard_detail
+from hijaiyyah.core.master_table import MASTER_TABLE
 
 # ── Helpers ────────────────────────────────────────────────────────
 
@@ -164,8 +160,6 @@ class TestBabI_Mod4Consistency:
         # For open paths, this is vacuously true.
         # We check: if the letter DOES have Θ̂ ≡ 0 mod 4, it may be closed.
         # The check passes for all 28 letters as specified.
-        v = _v18(entry)
-        theta = v[0]
         # Vacuously true check: Mod-4 gate analysis always passes
         # because we verify the contrapositive is consistent
         assert True  # mod-4 consistency holds for all letters
@@ -405,7 +399,7 @@ class TestITM_Rank:
 class TestITM_NearestNeighbors:
     """6 nearest-neighbor pairs at d₂ = 1."""
 
-    NN_PAIRS = [
+    NN_PAIRS: ClassVar[List[Tuple[str, str]]] = [
         ("ح", "خ"),
         ("ص", "ض"),
         ("ط", "ظ"),

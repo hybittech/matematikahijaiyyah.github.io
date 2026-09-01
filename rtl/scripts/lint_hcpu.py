@@ -15,10 +15,10 @@ Output:
     - Writes lint_report.txt
 """
 
+import argparse
+import os
 import subprocess
 import sys
-import os
-import argparse
 from pathlib import Path
 
 # ── RTL source files (relative to rtl/) ────────────────────────
@@ -41,11 +41,13 @@ CORE_SOURCES = [
     "hcpu_uart_tx.v",
 ]
 
-FPGA_SOURCES = CORE_SOURCES + [
+FPGA_SOURCES = [
+    *CORE_SOURCES,
     "fpga/xilinx/hcpu_xilinx_top.v",
 ]
 
-MPW_SOURCES = CORE_SOURCES + [
+MPW_SOURCES = [
+    *CORE_SOURCES,
     "mpw/hcpu_wb_adapter.v",
     "mpw/hcpu_mpw_top.v",
 ]
@@ -94,7 +96,7 @@ def run_lint(verilator_bin, top_module, sources, rtl_dir, report_file):
 
     # Write report
     with open(report_file, "w") as f:
-        f.write(f"HCPU Verilator Lint Report\n")
+        f.write("HCPU Verilator Lint Report\n")
         f.write(f"{'=' * 60}\n")
         f.write(f"Top module: {top_module}\n")
         f.write(f"Sources: {len(sources)} files\n")
@@ -128,7 +130,8 @@ def run_lint(verilator_bin, top_module, sources, rtl_dir, report_file):
 def main():
     parser = argparse.ArgumentParser(description="HCPU Verilator Lint Runner")
     parser.add_argument("--verilator", default=None, help="Path to verilator binary")
-    parser.add_argument("--top", default="hcpu_top", choices=["hcpu_top", "hcpu_xilinx_top", "hcpu_mpw_top"],
+    parser.add_argument("--top", default="hcpu_top",
+                        choices=["hcpu_top", "hcpu_xilinx_top", "hcpu_mpw_top"],
                         help="Top module to lint")
     parser.add_argument("--report", default=None, help="Output report file")
     args = parser.parse_args()
@@ -166,7 +169,7 @@ def main():
     warnings = result.stderr.count("%Warning")
 
     if errors == 0 and warnings == 0:
-        print(f"✅ LINT CLEAN — no errors, no warnings")
+        print("✅ LINT CLEAN — no errors, no warnings")
     elif errors == 0:
         print(f"⚠️  {warnings} warnings (no errors)")
     else:

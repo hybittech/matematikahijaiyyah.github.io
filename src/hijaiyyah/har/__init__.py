@@ -23,15 +23,15 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
-try:
-    from hijaiyyah.core.master_table import MASTER_TABLE as _MT
-except ImportError:
-    _MT = None
+# First-party and always importable — the try/except that used to wrap this
+# guarded against nothing, and assigning None to a class name is what mypy
+# was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
+# every remaining guarded import honest.
+from hijaiyyah.core.master_table import MASTER_TABLE as _MT
 
-try:
-    from hijaiyyah.core.codex import Codex as _Codex
-except ImportError:
-    _Codex = None
+# hijaiyyah.core.codex has never existed — the module is core.codex_entry and
+# the class is CodexEntry. Nothing here referenced the import beyond its own
+# fallback, so it is removed rather than repointed.
 
 
 class HARStatus(Enum):

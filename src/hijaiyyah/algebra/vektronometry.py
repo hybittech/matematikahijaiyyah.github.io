@@ -43,6 +43,24 @@ def comp_angle(h) -> float:
     return 0.0
 
 
+def project(h) -> Dict[str, List[int]]:
+    """
+    Split v18 into its four layers, each padded back to full width.
+
+    Lived in the HC evaluator only, which made it the one stdlib entry with no
+    implementation behind it here.
+    """
+    v = _v(h)
+    slots = {"theta": [0], "N": [1, 2, 3], "K": [4, 5, 6, 7, 8], "Q": [9, 10, 11, 12, 13]}
+    out: Dict[str, List[int]] = {}
+    for name, idx in slots.items():
+        layer = [0] * 18
+        for i in idx:
+            layer[i] = v[i]
+        out[name] = layer
+    return out
+
+
 def norm2(h) -> int:
     return _n2(_v(h))
 

@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import hashlib
 import math
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 from hijaiyyah.core.exceptions import EBNFSemanticError
+from hijaiyyah.core.guards import compute_U
 from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
 from hijaiyyah.language.ast_nodes import (
+    ArrayLiteral,
+    AssignStmt,
     ASTNode,
     BinaryExpr,
     Block,
@@ -62,8 +65,15 @@ def _v14(obj: Any) -> List[int]:
 
 
 def _U(vec: List[int]) -> int:
-    """U(h) = Qx + Qs + Qa + 4·Qc  (Definition 11.1.1)."""
-    return vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    """
+    U(h) = Qx + Qs + Qa + 4·Qc  (Definition 11.1.1).
+
+    Forwards to core.guards rather than restating the formula. That one
+    expression had 31 hand-written copies across 16 files, and every
+    divergence this project has had came from a truth kept in more than
+    one place.
+    """
+    return compute_U(vec)
 
 
 def _rho(vec: List[int]) -> int:
@@ -186,7 +196,7 @@ def _guard_detail(vec: List[int]) -> Dict[str, Any]:
     R4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
 
     # R5: U = Qx + Qs + Qa + 4·Qc
-    R5 = U == vec[10] + vec[11] + vec[12] + 4 * vec[13]
+    R5 = U == _U(vec)
 
     return {
         "R1": R1,
@@ -218,9 +228,15 @@ def _build_exomatrix(v: List[int]) -> List[List[int]]:
     theta = v[0]
     U = _U(v)
     rho = theta - U
-    AN = v[1] + v[2] + v[3]
-    AK = v[4] + v[5] + v[6] + v[7] + v[8]
-    AQ = v[9] + v[10] + v[11] + v[12] + v[13]
+    # A_N/A_K/A_Q are read from v₁₈, not recomputed from the components they
+    # summarise. Recomputing them makes audit() tautological: R2–R4 compare a
+    # matrix cell against the very sum that produced it, so a vector whose
+    # stored checksum disagrees with its components would still audit clean.
+    # For canonical letters the two are equal — guards G1–G3 enforce that — so
+    # this only changes behaviour on the corrupt input the audit exists to catch.
+    AN = v[14]
+    AK = v[15]
+    AQ = v[16]
 
     return [
         [theta, U, rho, 0, 0],
@@ -280,10 +296,19 @@ class Environment:
 
     def __init__(self, parent: Optional[Environment] = None):
         self._values: Dict[str, Any] = {}
+        # name -> the keyword it was declared with, for bindings that cannot be
+        # reassigned. Kept so the error can suggest the right fix: `let mut`
+        # rescues a `let`, but nothing rescues a `const`.
+        self._frozen: Dict[str, str] = {}
         self._parent = parent
 
-    def define(self, name: str, value: Any) -> None:
+    def define(
+        self, name: str, value: Any, *, mutable: bool = True, kind: str = "let"
+    ) -> None:
         self._values[name] = value
+        self._frozen.pop(name, None)
+        if not mutable:
+            self._frozen[name] = kind
 
     def get(self, name: str) -> Any:
         if name in self._values:
@@ -295,6 +320,19 @@ class Environment:
 
     def assign(self, name: str, value: Any) -> None:
         if name in self._values:
+            kind = self._frozen.get(name)
+            if kind == "const":
+                raise EBNFSemanticError(
+                    f"Cannot assign to constant '{name}' — "
+                    "declare it with `let mut` if it needs to change"
+                )
+            if kind is not None:
+                # `let` binds immutably, as docs/hc_language.md §5.1 specifies;
+                # `let mut` is the mutable form.
+                raise EBNFSemanticError(
+                    f"Cannot assign to immutable binding '{name}' — "
+                    f"declare it as `let mut {name}`"
+                )
             self._values[name] = value
             return
         parent = self._parent
@@ -358,13 +396,7 @@ class HCEvaluator:
         # hm module namespace — the five fields
         g.define(
             "hm",
-            {
-                "vectronometry": self._mod_vectronometry(),
-                "differential": self._mod_differential(),
-                "integral": self._mod_integral(),
-                "geometry": self._mod_geometry(),
-                "exomatrix": self._mod_exomatrix(),
-            },
+            self._build_stdlib(),
         )
 
     # ── Built-in implementations ─────────────────────────────────
@@ -389,10 +421,19 @@ class HCEvaluator:
         raise EBNFSemanticError(f"load() expects char, got {type(ch).__name__}")
 
     def _bi_load_id(self, idx: int) -> CodexEntry:
+        """
+        Load a letter by its 1-based index, 1..28.
+
+        Everything else in the system numbers letters from 1 —
+        CodexEntry.index, the HCPU ROM, the H-ISA HLOAD instruction, and
+        §13.1 of the language spec. This builtin alone counted from 0, which
+        is the same off-by-one that made HLOAD load Ba on hardware and Ta in
+        software until the execution parity tests caught it.
+        """
         entries = _all_entries()
-        if 0 <= idx < len(entries):
-            return entries[idx]
-        raise EBNFSemanticError(f"load_id({idx}): out of range 0..{len(entries) - 1}")
+        if 1 <= idx <= len(entries):
+            return entries[idx - 1]
+        raise EBNFSemanticError(f"load_id({idx}): out of range 1..{len(entries)}")
 
     def _bi_is_hijaiyyah(self, ch: Any) -> bool:
         if not isinstance(ch, str):
@@ -425,12 +466,17 @@ class HCEvaluator:
 
     def _eval_LetStmt(self, node: LetStmt) -> Any:
         val = self.evaluate(node.value)
-        self.current_env.define(node.name, val)
+        self.current_env.define(node.name, val, mutable=node.mutable)
+        return val
+
+    def _eval_AssignStmt(self, node: AssignStmt) -> Any:
+        val = self.evaluate(node.value)
+        self.current_env.assign(node.name, val)
         return val
 
     def _eval_ConstStmt(self, node: ConstStmt) -> Any:
         val = self.evaluate(node.value)
-        self.current_env.define(node.name, val)
+        self.current_env.define(node.name, val, mutable=False, kind="const")
         return val
 
     def _eval_ExpressedStmt(self, node: ExpressedStmt) -> Any:
@@ -669,6 +715,16 @@ class HCEvaluator:
 
     # ── Index expressions (h[0], arr[i]) ─────────────────────────
 
+    def _eval_ArrayLiteral(self, node: ArrayLiteral) -> List[Any]:
+        """
+        Build a list from `[a, b, c]`.
+
+        The lexer, parser and IndexExpr all handled arrays; only this was
+        missing, so an array literal parsed cleanly and then raised
+        "No evaluator for AST node" the moment it was evaluated.
+        """
+        return [self.evaluate(element) for element in node.elements]
+
     def _eval_IndexExpr(self, node) -> Any:
         """Handle h[0], arr[i], etc."""
         obj = self.evaluate(node.obj)
@@ -791,358 +847,55 @@ class HCEvaluator:
 
     # ── Field 1: hm::vectronometry (Bab II-A, Ch 17–21) ─────────
 
-    def _mod_vectronometry(self) -> Dict[str, Callable]:
+    # ══════════════════════════════════════════════════════════════
+    #  Standard library
+    # ══════════════════════════════════════════════════════════════
+    #
+    # Each hm:: module forwards to the corresponding package under
+    # hijaiyyah.algebra rather than reimplementing it.
+    #
+    # These builders used to hold their own copies of the maths, which made the
+    # evaluator a third implementation alongside the Python packages and the
+    # JavaScript engine — and it had drifted: 27 of the 55 functions the grammar
+    # advertises had no implementation at all here, so half of hm::geometry
+    # raised "Module member not found" when called.
+    #
+    # Names come from grammar.STDLIB_MODULES, so the advertised surface and the
+    # callable surface cannot disagree; anything listed there and missing from
+    # its package fails loudly at construction instead of at the call site.
 
-        def project(h) -> Dict[str, List[int]]:
-            v = _vec(h)
-            return {
-                "theta": _proj(v, [0]),
-                "N": _proj(v, [1, 2, 3]),
-                "K": _proj(v, [4, 5, 6, 7, 8]),
-                "Q": _proj(v, [9, 10, 11, 12, 13]),
-            }
+    _STDLIB_SOURCES: ClassVar[Dict[str, str]] = {
+        "vectronometry": "hijaiyyah.algebra.vektronometry",
+        "differential": "hijaiyyah.algebra.normivektor",
+        "integral": "hijaiyyah.algebra.aggregametric",
+        "geometry": "hijaiyyah.algebra.intrametric",
+        "exomatrix": "hijaiyyah.algebra.exometric",
+    }
 
-        def primitive_ratios(h) -> Dict[str, float]:
-            """r_N + r_K + r_Q = 1  (Theorem 18.2.1)."""
-            v = _vec(h)
-            total = v[14] + v[15] + v[16]
-            if total == 0:
-                return {"r_N": 0.0, "r_K": 0.0, "r_Q": 0.0}
-            return {
-                "r_N": v[14] / total,
-                "r_K": v[15] / total,
-                "r_Q": v[16] / total,
-            }
+    def _build_stdlib(self) -> Dict[str, Dict[str, Callable]]:
+        from importlib import import_module
 
-        def turning_ratios(h) -> Dict[str, float]:
-            """r_U + r_rho = 1 for Θ̂ > 0  (Theorem 19.1.1)."""
-            v = _vec(h)
-            theta = v[0]
-            U = _U(v)
-            rho = theta - U
-            if theta == 0:
-                return {"r_U": 0.0, "r_rho": 0.0, "r_loop": 0.0}
-            return {
-                "r_U": U / theta,
-                "r_rho": rho / theta,
-                "r_loop": (4 * v[13]) / theta,
-            }
+        from .grammar import STDLIB_MODULES
 
-        def comp_angle(h) -> float:
-            """
-            CORRECTED: Compositional angle α(h)  (Definition 19.3.1).
-            α(h) = arctan(A_Q / A_K)
-            """
-            v = _vec(h)
-            ak = v[15]  # A_K
-            aq = v[16]  # A_Q
-            if ak > 0:
-                return math.atan(aq / ak)
-            elif aq > 0:
-                return math.pi / 2
-            else:
-                return 0.0
+        modules: Dict[str, Dict[str, Callable]] = {}
+        for short, dotted in self._STDLIB_SOURCES.items():
+            package = import_module(dotted)
+            declared = STDLIB_MODULES[f"hm::{short}"]
+            names = list(declared)  # a dict yields its keys, a list its items
 
-        def norm2(h) -> int:
-            return _norm2_v14(_vec(h))
+            table: Dict[str, Callable] = {}
+            missing: List[str] = []
+            for name in names:
+                fn = getattr(package, name, None)
+                if callable(fn):
+                    table[name] = fn
+                else:
+                    missing.append(name)
 
-        def norm(h) -> float:
-            return math.sqrt(_norm2_v14(_vec(h)))
-
-        def inner(h1, h2) -> int:
-            return _inner_v14(_vec(h1), _vec(h2))
-
-        def cosine(h1, h2) -> float:
-            v1, v2 = _vec(h1), _vec(h2)
-            n1 = math.sqrt(_norm2_v14(v1))
-            n2 = math.sqrt(_norm2_v14(v2))
-            if n1 == 0 or n2 == 0:
-                return 0.0
-            return max(0.0, _inner_v14(v1, v2) / (n1 * n2))
-
-        def pythagorean_check(h) -> Dict[str, Any]:
-            """‖h‖² = ‖Π_Θ‖² + ‖Π_N‖² + ‖Π_K‖² + ‖Π_Q‖²  (Thm 20.2.1)."""
-            v = _vec(h)
-            lhs = _norm2_v14(v)
-            sq_theta = v[0] ** 2
-            sq_N = sum(v[k] ** 2 for k in range(1, 4))
-            sq_K = sum(v[k] ** 2 for k in range(4, 9))
-            sq_Q = sum(v[k] ** 2 for k in range(9, 14))
-            rhs = sq_theta + sq_N + sq_K + sq_Q
-            return {
-                "lhs": lhs,
-                "rhs": rhs,
-                "theta": sq_theta,
-                "N": sq_N,
-                "K": sq_K,
-                "Q": sq_Q,
-                "pass": lhs == rhs,
-            }
-
-        def full_table() -> List[Dict]:
-            """Complete vectronometry table for all 28 letters (Ch 21)."""
-            rows = []
-            for e in _all_entries():
-                v = list(e.vector)
-                pr = primitive_ratios(e)
-                tr = turning_ratios(e)
-                rows.append(
-                    {
-                        "letter": e.char,
-                        "name": e.name,
-                        "norm2": _norm2_v14(v),
-                        "norm": math.sqrt(_norm2_v14(v)),
-                        "r_N": pr["r_N"],
-                        "r_K": pr["r_K"],
-                        "r_Q": pr["r_Q"],
-                        "alpha_deg": math.degrees(comp_angle(e)),
-                        "U": _U(v),
-                        "rho": _rho(v),
-                        "r_U": tr["r_U"],
-                        "r_rho": tr["r_rho"],
-                        "r_loop": tr["r_loop"],
-                    }
+            if missing:
+                raise EBNFSemanticError(
+                    f"hm::{short} advertises {missing} but {dotted} does not "
+                    "define them"
                 )
-            return rows
-
-        return {
-            "project": project,
-            "primitive_ratios": primitive_ratios,
-            "turning_ratios": turning_ratios,
-            "comp_angle": comp_angle,
-            "norm2": norm2,
-            "norm": norm,
-            "inner": inner,
-            "cosine": cosine,
-            "pythagorean_check": pythagorean_check,
-            "full_table": full_table,
-        }
-
-    # ── Field 2: hm::differential (Bab II-B, Ch 22–24) ──────────
-
-    def _mod_differential(self) -> Dict[str, Callable]:
-
-        def diff(h1, h2) -> List[int]:
-            """Δ(h₁, h₂) = v₁₄(h₁) − v₁₄(h₂) ∈ ℤ¹⁴  (Def 22.1.1)."""
-            v1, v2 = _vec(h1), _vec(h2)
-            return [v1[i] - v2[i] for i in range(14)]
-
-        def norm_decomposition(h1, h2) -> Dict[str, Any]:
-            """‖Δ‖² = Δ_Θ² + ‖Δ_N‖² + ‖Δ_K‖² + ‖Δ_Q‖²  (Thm 22.2.1)."""
-            v1, v2 = _vec(h1), _vec(h2)
-            d_theta = (v1[0] - v2[0]) ** 2
-            d_N = sum((v1[k] - v2[k]) ** 2 for k in range(1, 4))
-            d_K = sum((v1[k] - v2[k]) ** 2 for k in range(4, 9))
-            d_Q = sum((v1[k] - v2[k]) ** 2 for k in range(9, 14))
-            total = d_theta + d_N + d_K + d_Q
-            return {
-                "total": total,
-                "theta": d_theta,
-                "N": d_N,
-                "K": d_K,
-                "Q": d_Q,
-                "pct_turning": (d_theta / total * 100) if total else 0.0,
-            }
-
-        def dot_gradient(h1, h2) -> List[int]:
-            """∇_N for dot-variant pairs (Ch 23.1)."""
-            v1, v2 = _vec(h1), _vec(h2)
-            return [v2[k] - v1[k] for k in range(1, 4)]
-
-        def u_gradient() -> List[int]:
-            """∇_Q U = (0, 1, 1, 1, 4) — constant  (Lemma 23.2.1)."""
-            return [0, 1, 1, 1, 4]
-
-        def all_dot_variants() -> List[Tuple[str, str, List[int]]]:
-            """All dot-variant pairs in H₂₈."""
-            entries = _all_entries()
-            result = []
-            for i, e1 in enumerate(entries):
-                for j, e2 in enumerate(entries):
-                    if i >= j:
-                        continue
-                    v1, v2 = list(e1.vector), list(e2.vector)
-                    theta_same = v1[0] == v2[0]
-                    kq_same = all(v1[k] == v2[k] for k in range(4, 14))
-                    n_diff = any(v1[k] != v2[k] for k in range(1, 4))
-                    if theta_same and kq_same and n_diff:
-                        grad = [v2[k] - v1[k] for k in range(1, 4)]
-                        result.append((e1.char, e2.char, grad))
-            return result
-
-        def second_diff(h1, h2, h3) -> List[int]:
-            """Δ²(h₁,h₂,h₃) = Δ(h₃,h₂) − Δ(h₂,h₁)  (Def 24.1.1)."""
-            d32 = diff(h3, h2)
-            d21 = diff(h2, h1)
-            return [d32[i] - d21[i] for i in range(14)]
-
-        def distance_table() -> List[Dict]:
-            """Distance table for selected pairs (Ch 24.3)."""
-            entries = _all_entries()
-            char_map = {e.char: e for e in entries}
-            explicit_pairs = [
-                ("ص", "ض"),
-                ("د", "ذ"),
-                ("ح", "خ"),
-                ("ع", "غ"),
-                ("ط", "ظ"),
-                ("د", "ر"),
-                ("ب", "ج"),
-                ("ب", "ت"),
-                ("ا", "ب"),
-                ("س", "ش"),
-                ("م", "هـ"),
-                ("ب", "هـ"),
-                ("ا", "هـ"),
-            ]
-            rows = []
-            for ch1, ch2 in explicit_pairs:
-                e1 = char_map.get(ch1)
-                e2 = char_map.get(ch2)
-                if e1 and e2:
-                    dec = norm_decomposition(e1, e2)
-                    rows.append(
-                        {
-                            "h1": ch1,
-                            "h2": ch2,
-                            "dist2_sq": dec["total"],
-                            "d2": math.sqrt(dec["total"]),
-                            **dec,
-                        }
-                    )
-            return rows
-
-        return {
-            "diff": diff,
-            "norm_decomposition": norm_decomposition,
-            "dot_gradient": dot_gradient,
-            "u_gradient": u_gradient,
-            "all_dot_variants": all_dot_variants,
-            "second_diff": second_diff,
-            "distance_table": distance_table,
-        }
-
-    # ── Field 3: hm::integral (Bab II-C, Ch 25–28) ──────────────
-
-    def _mod_integral(self) -> Dict[str, Callable]:
-
-        def string_integral(text: str) -> Dict:
-            """Cod₁₈(w) = Σ v₁₈(xᵢ)  (Def 25.1.1)."""
-            total = [0] * 18
-            length = 0
-            trajectory = [[0] * 18]
-
-            for ch in text:
-                entry = MASTER_TABLE.get_by_char(ch)
-                if entry is None:
-                    continue
-                v = list(entry.vector)
-                total = [total[i] + v[i] for i in range(18)]
-                length += 1
-                trajectory.append(list(total))
-
-            return {
-                "cod18": total,
-                "length": length,
-                "trajectory": trajectory,
-            }
-
-        def add_codex(cod1, cod2) -> Dict:
-            """∫_{uv} = ∫_u + ∫_v  (Theorem 25.2.1)."""
-            c1 = cod1["cod18"] if isinstance(cod1, dict) else cod1
-            c2 = cod2["cod18"] if isinstance(cod2, dict) else cod2
-            merged = [c1[i] + c2[i] for i in range(18)]
-            return {"cod18": merged, "length": 0, "trajectory": []}
-
-        def layer_integrals(text: str) -> Dict:
-            """Layer-wise integrals (Ch 26)."""
-            cod = string_integral(text)
-            v = cod["cod18"]
-            U = _U(v)
-            return {
-                "theta": v[0],
-                "N": [v[1], v[2], v[3]],
-                "K": [v[4], v[5], v[6], v[7], v[8]],
-                "Q": [v[9], v[10], v[11], v[12], v[13]],
-                "U": U,
-                "rho": v[0] - U,
-            }
-
-        def centroid(text: str) -> List[float]:
-            """v̄(w) = (1/n) Σ v₁₈(xᵢ)  (Def 27.1.1)."""
-            cod = string_integral(text)
-            n = cod["length"]
-            if n == 0:
-                return [0.0] * 18
-            return [cod["cod18"][i] / n for i in range(18)]
-
-        def cumulative(text: str) -> List[List[int]]:
-            """Cumulative trajectory S₀ .. Sₙ  (Def 27.2.1)."""
-            return string_integral(text)["trajectory"]
-
-        return {
-            "string_integral": string_integral,
-            "add_codex": add_codex,
-            "layer_integrals": layer_integrals,
-            "centroid": centroid,
-            "cumulative": cumulative,
-        }
-
-    # ── Field 4: hm::geometry (Bab II-D, Ch 29–31) ──────────────
-
-    def _mod_geometry(self) -> Dict[str, Callable]:
-
-        def euclidean(h1, h2) -> float:
-            v1, v2 = _vec(h1), _vec(h2)
-            return math.sqrt(sum((v1[i] - v2[i]) ** 2 for i in range(14)))
-
-        def diameter_sq() -> int:
-            entries = _all_entries()
-            max_d2 = 0
-            for i in range(len(entries)):
-                v1 = list(entries[i].vector)
-                for j in range(i + 1, len(entries)):
-                    v2 = list(entries[j].vector)
-                    d2 = sum((v1[k] - v2[k]) ** 2 for k in range(14))
-                    max_d2 = max(max_d2, d2)
-            return max_d2
-
-        def diameter() -> float:
-            return math.sqrt(diameter_sq())
-
-        return {
-            "euclidean": euclidean,
-            "diameter_sq": diameter_sq,
-            "diameter": diameter,
-        }
-
-    # ── Field 5: hm::exomatrix (Bab II-E, Ch 32–36) ─────────────
-
-    def _mod_exomatrix(self) -> Dict[str, Callable]:
-
-        def build(h) -> List[List[int]]:
-            return _build_exomatrix(_vec(h))
-
-        def audit(E: List[List[int]]) -> Dict[str, bool]:
-            R1 = E[0][0] == E[0][1] + E[0][2]
-            R2 = E[1][4] == E[1][0] + E[1][1] + E[1][2]
-            R3 = E[4][3] == sum(E[2])
-            R4 = E[4][4] == sum(E[3])
-            R5 = E[0][1] == E[3][1] + E[3][2] + E[3][3] + 4 * E[3][4]
-            return {
-                "R1": R1,
-                "R2": R2,
-                "R3": R3,
-                "R4": R4,
-                "R5": R5,
-                "all_pass": R1 and R2 and R3 and R4 and R5,
-            }
-
-        def phi(E: List[List[int]]) -> int:
-            return sum(E[r][c] ** 2 for r in range(5) for c in range(5))
-
-        return {
-            "build": build,
-            "audit": audit,
-            "phi": phi,
-        }
+            modules[short] = table
+        return modules

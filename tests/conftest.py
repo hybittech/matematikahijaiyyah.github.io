@@ -1,8 +1,9 @@
 """Shared test fixtures for all test modules."""
 
 import pytest
-from hijaiyyah.core.master_table import MASTER_TABLE, MasterTable
+
 from hijaiyyah.core.codex_entry import CodexEntry
+from hijaiyyah.core.master_table import MASTER_TABLE, MasterTable
 from hijaiyyah.language.evaluator import HCEvaluator
 
 

@@ -1,6 +1,7 @@
 """Tests for the HC lexer."""
 from hijaiyyah.language.lexer import Lexer, TokenType
 
+
 def test_integer():
     tokens = Lexer("42").tokenize()
     assert tokens[0].type == TokenType.INTEGER and tokens[0].value == "42"

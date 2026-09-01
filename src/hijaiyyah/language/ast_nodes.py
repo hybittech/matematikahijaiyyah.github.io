@@ -20,6 +20,15 @@ class LetStmt(ASTNode):
     name: str = ""
     value: Any = None
     type_ann: str = ""
+    mutable: bool = False
+
+
+@dataclass
+class AssignStmt(ASTNode):
+    """Reassignment of an existing binding: `x = expr`."""
+
+    name: str = ""
+    value: Any = None
 
 
 @dataclass

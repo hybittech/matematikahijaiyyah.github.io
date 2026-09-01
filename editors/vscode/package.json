@@ -1,0 +1,44 @@
+{
+    "name": "hc-hijaiyyah",
+    "displayName": "HC — Hijaiyyah Codex",
+    "description": "Syntax highlighting and language server for the HC language.",
+    "version": "1.2.0",
+    "publisher": "hmcl",
+    "license": "SEE LICENSE IN LICENSE",
+    "engines": { "vscode": "^1.75.0" },
+    "categories": ["Programming Languages"],
+    "activationEvents": ["onLanguage:hc"],
+    "main": "./client/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "hc",
+                "aliases": ["HC", "Hijaiyyah Codex"],
+                "extensions": [".hc"],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "hc",
+                "scopeName": "source.hc",
+                "path": "./syntaxes/hc.tmLanguage.json"
+            }
+        ],
+        "configuration": {
+            "title": "HC",
+            "properties": {
+                "hc.languageServer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Report parse errors as you type, using the hc language server."
+                },
+                "hc.languageServer.command": {
+                    "type": "string",
+                    "default": "hc",
+                    "description": "Command that launches the HC toolchain. It is run as '<command> lsp'."
+                }
+            }
+        }
+    }
+}

@@ -89,7 +89,6 @@ def main():
         ]
         for i in range(1, 29):
             vec = vectors[i]
-            hex_val = vec_to_hex144(vec)
             name = names[i - 1]
             concat = ", ".join(f"8'd{v}" for v in reversed(vec))
             print(f"5'd{i:2d}: data_out = {{{concat}}}; // {name} {vec}")

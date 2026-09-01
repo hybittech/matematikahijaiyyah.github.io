@@ -1,7 +1,6 @@
 """Test guard checks and audit detail for all 28 letters."""
 
-import pytest
-from hijaiyyah.core.guards import guard_check, guard_detail, compute_U, compute_rho
+from hijaiyyah.core.guards import compute_rho, compute_U, guard_check, guard_detail
 
 
 class TestGuardCheck:

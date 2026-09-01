@@ -46,16 +46,26 @@ print()
 
 # Cross-check
 errors = []
-for i, (csv_row, js_row) in enumerate(zip(csv_data, js_entries)):
+for i, (csv_row, js_row) in enumerate(zip(csv_data, js_entries, strict=True)):
     letter_id = i + 1
     if csv_row['char'] != js_row['char']:
-        errors.append(f"#{letter_id}: CHAR MISMATCH - CSV='{csv_row['char']}' vs JS='{js_row['char']}'")
+        errors.append(
+            f"#{letter_id}: CHAR MISMATCH - "
+            f"CSV='{csv_row['char']}' vs JS='{js_row['char']}'"
+        )
     
     if csv_row['v18'] != js_row['v18']:
         diff_indices = [j for j in range(18) if csv_row['v18'][j] != js_row['v18'][j]]
-        labels = ['Θ̂','Na','Nb','Nd','Kp','Kx','Ks','Ka','Kc','Qp','Qx','Qs','Qa','Qc','H*','AN','AK','AQ']
+        labels = [
+            'Θ̂', 'Na', 'Nb', 'Nd', 'Kp', 'Kx', 'Ks', 'Ka', 'Kc',
+            'Qp', 'Qx', 'Qs', 'Qa', 'Qc', 'AN', 'AK', 'AQ', 'H*',
+        ]
         for idx in diff_indices:
-            errors.append(f"#{letter_id} {csv_row['char']} ({csv_row['name']}): {labels[idx]}[{idx}] CSV={csv_row['v18'][idx]} vs JS={js_row['v18'][idx]}")
+            errors.append(
+                f"#{letter_id} {csv_row['char']} ({csv_row['name']}): "
+                f"{labels[idx]}[{idx}] "
+                f"CSV={csv_row['v18'][idx]} vs JS={js_row['v18'][idx]}"
+            )
 
 if errors:
     print(f"❌ FOUND {len(errors)} DISCREPANCIES:")

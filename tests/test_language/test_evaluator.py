@@ -1,7 +1,8 @@
 """Tests for the HC evaluator."""
+from hijaiyyah.language.evaluator import HCEvaluator
 from hijaiyyah.language.lexer import Lexer
 from hijaiyyah.language.parser import Parser
-from hijaiyyah.language.evaluator import HCEvaluator
+
 
 def _eval(src):
     tokens = Lexer(src).tokenize()

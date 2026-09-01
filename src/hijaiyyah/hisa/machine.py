@@ -12,7 +12,7 @@ Bab III §3.30: HVM — Hybit Virtual Machine
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from ..core.exomatrix import build_exomatrix
 from ..core.guards import compute_U, full_guard_check, guard_check
@@ -51,6 +51,8 @@ class HISAMachine:
         self.table = table
         self.regs = RegisterFile()
         self.code: List[int] = []
+        # Sparse stand-in for hcpu_dataram: 4096 x 32-bit words, zero-filled.
+        self.data_mem: Dict[int, int] = {}
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -63,6 +65,7 @@ class HISAMachine:
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
         self.code = list(code)
+        self.data_mem.clear()
         self.regs.pc = 0
         self._halted = False
         self._exit_code = 0
@@ -101,6 +104,43 @@ class HISAMachine:
             result.append(entry)
         return result
 
+    # ── HCPU arithmetic model ────────────────────────────────────
+    # The HCPU is a 32-bit machine with a 12-bit immediate field. Python
+    # integers are unbounded, so every result is masked back to 32 bits or the
+    # two machines diverge the moment anything overflows.
+
+    XLEN = 32
+    _MASK = (1 << 32) - 1
+    _SIGN = 1 << 31
+    DATA_DEPTH = 4096          # rtl/hcpu_pkg.vh DATA_DEPTH
+    DATA_ADDR_MASK = 0xFFF     # DATA_ADDR_W = 12
+
+    @classmethod
+    def _u32(cls, value: int) -> int:
+        """Wrap to an unsigned 32-bit word, as the RTL does."""
+        return value & cls._MASK
+
+    @classmethod
+    def _sext12(cls, imm: int) -> int:
+        """Sign-extend the 12-bit immediate — `imm_sext` in hcpu_execute.v."""
+        return imm - 0x1000 if imm & 0x800 else imm
+
+    def _set_compare_flags(self, difference: int) -> None:
+        """
+        Flags from a comparison, as hcpu_execute.v sets them: Z from the
+        32-bit result being zero, LT from its sign bit. The overflow flag is
+        left alone — the RTL does not touch it here either.
+        """
+        result = self._u32(difference)
+        self.regs.sr.zero = result == 0
+        self.regs.sr.overflow = bool(result & self._SIGN)
+
+    def _mem_read(self, addr: int) -> int:
+        return self.data_mem.get(addr & self.DATA_ADDR_MASK, 0)
+
+    def _mem_write(self, addr: int, value: int) -> None:
+        self.data_mem[addr & self.DATA_ADDR_MASK] = self._u32(value)
+
     def _execute(self, iw: InstructionWord) -> str:
         """Execute a decoded instruction. Returns description string."""
         op = iw.opcode
@@ -108,13 +148,23 @@ class HISAMachine:
         s1 = iw.src1 % HREG_COUNT
         s2 = iw.src2 % HREG_COUNT
         imm = iw.imm
+        # The PC has already advanced past this instruction; branches are
+        # resolved against the instruction's own address, as `id_pc` is in the
+        # RTL.
+        own_pc = self.regs.pc - 1
 
         entries = self.table.all_entries()
 
         # ── HLOAD (CLOAD): load letter into H-register ──────────
+        # IMM is a 1-based letter index, 1..28, matching the Master Table's own
+        # numbering (CodexEntry.index = i + 1) and the HCPU ROM, whose address
+        # port is documented as "letter index (1-28)" and reports valid = 0 for
+        # address 0. Indexing `entries` directly with IMM was off by one, so
+        # HLOAD H0, #2 loaded Ba on hardware and Ta here — silently, since every
+        # canonical letter passes the guards.
         if op == OpCode.HLOAD:
-            if imm < len(entries):
-                entry = entries[imm]
+            if 1 <= imm <= len(entries):
+                entry = entries[imm - 1]
                 self.regs.hreg[dst] = list(entry.vector)
                 return f"HLOAD H{dst} ← {entry.char} ({entry.name}) [idx={imm}]"
             return f"HLOAD H{dst} ← INVALID INDEX {imm}"
@@ -169,24 +219,30 @@ class HISAMachine:
             h = self.regs.hreg[s1]
             U = compute_U(h)
             rho = h[0] - U
-            self.regs.gpr[0] = U
-            self.regs.gpr[1] = rho
-            return f"HDCMP H{s1}: U={U}, ρ={rho} → GPR[0],GPR[1]"
+            # Two results, so this one takes a register pair: DST and DST+1.
+            second = (dst + 1) % len(self.regs.gpr)
+            self.regs.gpr[dst] = U
+            self.regs.gpr[second] = rho
+            return f"HDCMP H{s1}: U={U}, ρ={rho} → GPR[{dst}],GPR[{second}]"
 
         # ── HNRM2: squared norm ─────────────────────────────────
+        # Scalar results go to GPR[DST], not GPR[0]. Writing GPR[0] ignored the
+        # instruction's own destination field: on the HCPU, `HNRM2 R5, H0` puts
+        # the norm in R5, so the two machines left the answer in different
+        # registers while both reporting success.
         if op == OpCode.HNRM2:
             h = self.regs.hreg[s1]
             n2 = sum(x * x for x in h[:14])
-            self.regs.gpr[0] = n2
-            return f"HNRM2 GPR[0] = ‖H{s1}‖² = {n2}"
+            self.regs.gpr[dst] = n2
+            return f"HNRM2 GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
         # ── HDIST: squared Euclidean distance ───────────────────
         if op == OpCode.HDIST:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             d2 = sum((a[i] - b[i]) ** 2 for i in range(14))
-            self.regs.gpr[0] = d2
-            return f"HDIST GPR[0] = ‖H{s1} - H{s2}‖² = {d2}"
+            self.regs.gpr[dst] = d2
+            return f"HDIST GPR[{dst}] = ‖H{s1} - H{s2}‖² = {d2}"
 
         # ── HEXMT: build exomatrix ──────────────────────────────
         if op == OpCode.HEXMT:
@@ -263,51 +319,56 @@ class HISAMachine:
             return f"VPROJ_Q H{dst} = Π_Q(H{s1})"
 
         # ── Integer ops ─────────────────────────────────────────
-        if op == OpCode.IADD:
-            self.regs.gpr[dst % 18] = self.regs.gpr[s1 % 18] + self.regs.gpr[s2 % 18]
-            return f"IADD GPR[{dst%18}] = GPR[{s1%18}] + GPR[{s2%18}]"
+        # ADD / SUB / MUL / CMP — IADD, ISUB, IMUL and ICMP are aliases of
+        # these. Results wrap at 32 bits: Python integers do not, so without
+        # the mask a subtraction below zero or a large product left this
+        # machine holding a value the HCPU could not represent.
+        if op == OpCode.ADD:
+            self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] + self.regs.gpr[s2])
+            return f"ADD R{dst} = R{s1} + R{s2} = {self.regs.gpr[dst]}"
 
-        if op == OpCode.ISUB:
-            self.regs.gpr[dst % 18] = self.regs.gpr[s1 % 18] - self.regs.gpr[s2 % 18]
-            return f"ISUB GPR[{dst%18}] = GPR[{s1%18}] - GPR[{s2%18}]"
+        if op == OpCode.SUB:
+            self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] - self.regs.gpr[s2])
+            return f"SUB R{dst} = R{s1} - R{s2} = {self.regs.gpr[dst]}"
 
-        if op == OpCode.IMUL:
-            self.regs.gpr[dst % 18] = self.regs.gpr[s1 % 18] * self.regs.gpr[s2 % 18]
-            return f"IMUL GPR[{dst%18}] = GPR[{s1%18}] * GPR[{s2%18}]"
+        if op == OpCode.MUL:
+            self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] * self.regs.gpr[s2])
+            return f"MUL R{dst} = R{s1} * R{s2} = {self.regs.gpr[dst]}"
 
-        if op == OpCode.ICMP:
-            a_val = self.regs.gpr[s1 % 18]
-            b_val = self.regs.gpr[s2 % 18]
-            self.regs.sr.zero = (a_val == b_val)
-            return f"ICMP GPR[{s1%18}]={a_val} vs GPR[{s2%18}]={b_val}"
+        if op == OpCode.CMP:
+            self._set_compare_flags(self.regs.gpr[s1] - self.regs.gpr[s2])
+            return (
+                f"CMP R{s1}={self.regs.gpr[s1]} vs R{s2}={self.regs.gpr[s2]} "
+                f"→ Z={self.regs.sr.zero}"
+            )
 
         # ── Legacy scalar ops ───────────────────────────────────
         if op == OpCode.VDIST:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             d2 = sum((a[i] - b[i]) ** 2 for i in range(14))
-            self.regs.gpr[0] = d2
-            return f"VDIST GPR[0] = ‖H{s1} - H{s2}‖² = {d2}"
+            self.regs.gpr[dst] = d2
+            return f"VDIST GPR[{dst}] = ‖H{s1} - H{s2}‖² = {d2}"
 
         if op == OpCode.VRHO:
             h = self.regs.hreg[s1]
             U = compute_U(h)
             rho = h[0] - U
-            self.regs.gpr[0] = rho
-            return f"VRHO GPR[0] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
+            self.regs.gpr[dst] = rho
+            return f"VRHO GPR[{dst}] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
 
         if op == OpCode.VNORM:
             h = self.regs.hreg[s1]
             n2 = sum(x * x for x in h[:14])
-            self.regs.gpr[0] = n2
-            return f"VNORM GPR[0] = ‖H{s1}‖² = {n2}"
+            self.regs.gpr[dst] = n2
+            return f"VNORM GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
         if op == OpCode.VDOT:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             ip = sum(a[i] * b[i] for i in range(14))
-            self.regs.gpr[0] = ip
-            return f"VDOT GPR[0] = ⟨H{s1}, H{s2}⟩ = {ip}"
+            self.regs.gpr[dst] = ip
+            return f"VDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩ = {ip}"
 
         # ── Control Flow ────────────────────────────────────────
         if op == OpCode.JMP:
@@ -332,17 +393,33 @@ class HISAMachine:
                 return f"JNP → {imm} (not pass)"
             return "JNP — no jump (pass)"
 
+        # Conditional branches are PC-relative in the RTL —
+        # `branch_target = id_pc + imm_sext` — while JMP is absolute. These
+        # used to set pc = imm, so `JNE #0xFFE` (the -2 of the RTL's own loop
+        # test) jumped to address 4094 here and to PC-2 on the hardware.
         if op == OpCode.JEQ:
             if self.regs.sr.zero:
-                self.regs.pc = imm
-                return f"JEQ → {imm} (equal)"
+                self.regs.pc = own_pc + self._sext12(imm)
+                return f"JEQ → {self.regs.pc} (equal)"
             return "JEQ — no jump (not equal)"
 
         if op == OpCode.JNE:
             if not self.regs.sr.zero:
-                self.regs.pc = imm
-                return f"JNE → {imm} (not equal)"
+                self.regs.pc = own_pc + self._sext12(imm)
+                return f"JNE → {self.regs.pc} (not equal)"
             return "JNE — no jump (equal)"
+
+        if op == OpCode.JGD:
+            if self.regs.sr.guard_pass:
+                self.regs.pc = own_pc + self._sext12(imm)
+                return f"JGD → {self.regs.pc} (guard PASS)"
+            return "JGD — no jump (guard FAIL)"
+
+        if op == OpCode.JNGD:
+            if not self.regs.sr.guard_pass:
+                self.regs.pc = own_pc + self._sext12(imm)
+                return f"JNGD → {self.regs.pc} (guard FAIL)"
+            return "JNGD — no jump (guard PASS)"
 
         # ── Subroutine ──────────────────────────────────────────
         if op == OpCode.CALL:
@@ -364,7 +441,72 @@ class HISAMachine:
             self.regs.gpr[dst % 18] = self.regs.pop()
             return f"POP → GPR[{dst%18}]"
 
-        return f"UNKNOWN opcode 0x{op:02X}"
+        # ── Integer and data movement (RTL semantics) ───────────
+        # hcpu_execute.v: MOVI zero-extends its immediate, ADDI and CMPI
+        # sign-extend theirs, and every result wraps at 32 bits.
+
+        if op == OpCode.NOP:
+            return "NOP"
+
+        if op == OpCode.MOV:
+            self.regs.gpr[dst] = self.regs.gpr[s1]
+            return f"MOV R{dst} = R{s1} ({self.regs.gpr[dst]})"
+
+        if op == OpCode.MOVI:
+            self.regs.gpr[dst] = imm  # imm_zext
+            return f"MOVI R{dst} = {imm}"
+
+        if op == OpCode.ADDI:
+            value = self._u32(self.regs.gpr[s1] + self._sext12(imm))
+            self.regs.gpr[dst] = value
+            return f"ADDI R{dst} = R{s1} + {self._sext12(imm)} = {value}"
+
+        if op == OpCode.CMPI:
+            self._set_compare_flags(self.regs.gpr[s1] - self._sext12(imm))
+            return f"CMPI R{s1}, {self._sext12(imm)} → Z={self.regs.sr.zero}"
+
+        # ── Data memory ─────────────────────────────────────────
+        # LOAD:  addr = GPR[S1] + IMM, DST <- MEM[addr]
+        # STORE: addr = GPR[S2] + IMM, MEM[addr] <- GPR[S1]
+
+        if op == OpCode.LOAD:
+            addr = self._u32(self.regs.gpr[s1] + self._sext12(imm))
+            self.regs.gpr[dst] = self._mem_read(addr)
+            return f"LOAD R{dst} = MEM[{addr & self.DATA_ADDR_MASK}]"
+
+        if op == OpCode.STORE:
+            addr = self._u32(self.regs.gpr[s2] + self._sext12(imm))
+            self._mem_write(addr, self.regs.gpr[s1])
+            return f"STORE MEM[{addr & self.DATA_ADDR_MASK}] = R{s1}"
+
+        # ── HISAB serialization ─────────────────────────────────
+
+        if op == OpCode.HPACK:
+            from ..hisab.serialize import _nibble_pack
+
+            # Little-endian, matching hcpu_hisab.v and rtl/tb/gen_golden.py.
+            packed = _nibble_pack(self.regs.hreg[s1])
+            word0 = int.from_bytes(bytes(packed[0:4]), "little")
+            self.regs.gpr[dst] = word0
+            return f"HPACK R{dst} = 0x{word0:08X}"
+
+        if op == OpCode.HCRC:
+            from ..hisab.serialize import serialize_letter
+
+            crc = serialize_letter(self.regs.hreg[s1]).digest
+            self.regs.gpr[dst] = crc
+            return f"HCRC R{dst} = 0x{crc:08X}"
+
+        if op == OpCode.HALT_ERR:
+            self._halted = True
+            self._exit_code = 1
+            return "HALT_ERR — stopped on a faulting instruction"
+
+        # Anything left is not implemented by this machine. The HCPU raises
+        # HALT_ERR rather than continuing, and so does this.
+        self._halted = True
+        self._exit_code = 1
+        return f"UNKNOWN opcode 0x{op:02X} — HALT_ERR"
 
     def _hcheck_scan(self) -> Optional[str]:
         """

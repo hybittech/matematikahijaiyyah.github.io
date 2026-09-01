@@ -137,6 +137,7 @@ module hcpu_top #(
     reg  [7:0] uart_data;
 
     // Data RAM
+    wire                    dram_re;
     wire                    dram_we;
     wire [`DATA_ADDR_W-1:0] dram_addr;
     wire [`XLEN-1:0]        dram_wdata;
@@ -153,6 +154,14 @@ module hcpu_top #(
     reg [7:0] digits [0:9];
     reg [3:0] digit_idx;
     reg       print_active;
+
+    // ── Decimal conversion for PRINT ────────────────────────────
+    // Left as `/ 10` and `% 10` deliberately. A hand-written shift-add
+    // reciprocal was tried here and measured worse on both counts under
+    // synth_gowin: 10,836 LUTs against 8,871, and a longest topological path
+    // of 1,149 against 927. Yosys already lowers division by a constant into
+    // a better circuit than the textbook trick, so the obvious optimisation
+    // is a pessimisation. Re-measure before changing this.
 
     localparam P_IDLE   = 3'd0;
     localparam P_CONV   = 3'd1;
@@ -407,6 +416,7 @@ module hcpu_top #(
         .ex_mem_write   (ex_mem_write),
         .ex_mem_addr    (ex_mem_addr),
         .ex_mem_wdata   (ex_mem_wdata),
+        .dram_re        (dram_re),
         .dram_we        (dram_we),
         .dram_addr      (dram_addr),
         .dram_wdata     (dram_wdata),
@@ -534,6 +544,7 @@ module hcpu_top #(
     // ── Data RAM ────────────────────────────────────────────────
     hcpu_dataram u_dataram (
         .clk   (clk),
+        .re    (dram_re),
         .we    (dram_we),
         .addr  (dram_addr),
         .wdata (dram_wdata),

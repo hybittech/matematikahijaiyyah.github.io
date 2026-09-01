@@ -18,20 +18,17 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-try:
-    from hijaiyyah.skeleton.csgi import CSGIProcessor as _CSGI
-except ImportError:
-    _CSGI = None
+# skeleton.csgi defines CSGIGraph, CSGINode and CSGIEdge — never a
+# CSGIProcessor. The Master Table fallback below is what actually populates a
+# measurement, and it works.
+# First-party and always importable — the try/except that used to wrap this
+# guarded against nothing, and assigning None to a class name is what mypy
+# was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
+# every remaining guarded import honest.
+from hijaiyyah.core.guards import compute_U
+from hijaiyyah.core.master_table import MASTER_TABLE
 
-try:
-    from hijaiyyah.core.master_table import MASTER_TABLE
-except ImportError:
-    MASTER_TABLE = None
-
-try:
-    from hijaiyyah.core.codex import Codex as _Codex
-except ImportError:
-    _Codex = None
+# hijaiyyah.core.codex has never existed; nothing here used the import.
 
 
 # ── .hgeo Data Model ─────────────────────────────────────────
@@ -205,7 +202,6 @@ class PsiCompiler:
                  params: Optional[ExtractionParams] = None):
         self.font_path = font_path
         self.params = params or ExtractionParams()
-        self._csgi = _CSGI() if _CSGI else None
 
     def extract_glyph(self, letter: str) -> HGeoFile:
         """Extract geometry for a single glyph."""
@@ -215,17 +211,8 @@ class PsiCompiler:
             extraction_params=self.params,
         )
 
-        # Try CSGI pipeline if available
-        if self._csgi and hasattr(self._csgi, 'process'):
-            try:
-                result = self._csgi.process(letter)
-                if result:
-                    # Map CSGI output → .hgeo
-                    hgeo.measurement = self._map_csgi(result)
-            except Exception:
-                pass
-
-        # Fallback: use Master Table if available
+        # Measurement comes from the Master Table. A CSGi path was sketched
+        # here but never had a processor to call.
         if all(x == 0 for x in hgeo.v18) and MASTER_TABLE:
             entry = MASTER_TABLE.get_by_char(letter)
             if entry and hasattr(entry, 'vector'):
@@ -252,7 +239,7 @@ class PsiCompiler:
             m.A_K = v[15]
             m.A_Q = v[16]
             m.H_star = v[17]
-            m.U = v[10] + v[11] + v[12] + 4 * v[13]
+            m.U = compute_U(v)
             m.rho = m.theta_hat - m.U
         return m
 
@@ -266,8 +253,8 @@ class PsiCompiler:
             A_K=v18[15],
             A_Q=v18[16],
             H_star=v18[17],
-            U=v18[10] + v18[11] + v18[12] + 4 * v18[13],
-            rho=v18[0] - (v18[10] + v18[11] + v18[12] + 4 * v18[13]),
+            U=compute_U(v18),
+            rho=v18[0] - compute_U(v18),
         )
 
     def _run_guards(self, v18: List[int]) -> Dict[str, str]:

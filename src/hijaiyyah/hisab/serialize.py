@@ -13,6 +13,7 @@ from __future__ import annotations
 import struct
 from typing import List, Optional, Sequence, Tuple, Union
 
+from ..core.guards import compute_U
 from .digest import compute_digest
 from .protocol import (
     GUARD_G1_BIT,
@@ -38,7 +39,7 @@ def _compute_guard_status(v: Sequence[int]) -> int:
     status = 0
 
     # G1: ρ = Θ̂ − U ≥ 0
-    U = v[10] + v[11] + v[12] + 4 * v[13]
+    U = compute_U(v)
     rho = v[0] - U
     if rho >= 0:
         status |= (1 << GUARD_G1_BIT)
@@ -171,7 +172,7 @@ def serialize_matrix(matrix: Sequence[Sequence[int]], v18: Sequence[int]) -> His
             cells.append(val & 0xFF)
 
     # Relation-flag byte (§4.8.2): R1–R5
-    U = v18[10] + v18[11] + v18[12] + 4 * v18[13]
+    U = compute_U(v18)
     rho = v18[0] - U
     a_n = v18[1] + v18[2] + v18[3]
     a_k = v18[4] + v18[5] + v18[6] + v18[7] + v18[8]
@@ -186,7 +187,7 @@ def serialize_matrix(matrix: Sequence[Sequence[int]], v18: Sequence[int]) -> His
         rel_flags |= (1 << 2)  # R3
     if v18[16] == a_q:
         rel_flags |= (1 << 3)  # R4
-    if U == v18[10] + v18[11] + v18[12] + 4 * v18[13]:
+    if U == compute_U(v18):
         rel_flags |= (1 << 4)  # R5
 
     payload = bytes(cells) + bytes([rel_flags])

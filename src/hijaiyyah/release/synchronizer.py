@@ -7,7 +7,7 @@ import os
 class SyncSynchronizer:
     def __init__(self, release_dir: str = "release/HL-18E-v1.0"):
         self.release_dir = release_dir
-        self.manifest = {}
+        self.manifest: dict = {}
 
     def load_manifest(self) -> dict:
         path = os.path.join(self.release_dir, "MANIFEST.json")
@@ -17,4 +17,4 @@ class SyncSynchronizer:
         return self.manifest
 
     def verify(self, sha256: str) -> bool:
-        return self.manifest.get("sha256", "") == sha256
+        return bool(self.manifest.get("sha256", "") == sha256)

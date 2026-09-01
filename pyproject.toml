@@ -4,7 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hijaiyyah-hom"
-version = "1.0.0"
+# Keep in step with src/hijaiyyah/version.py __version__ and
+# hom-gui/package.json — tests/test_integrity/test_version_consistency.py
+# fails if they drift apart.
+version = "1.2.0"
 description = "Hijaiyyah Operating Machine — Core Computational System"
 readme = "README.md"
 license = {text = "Proprietary"}
@@ -33,6 +36,7 @@ dependencies = [
 ]
 
 [project.scripts]
+hc = "hijaiyyah.cli:main"
 hom = "hijaiyyah.__main__:main"
 hybit-ai = "hijaiyyah.ai.__main__:main"
 
@@ -98,6 +102,20 @@ python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 
 [tool.mypy]
-python_version = "3.11"
+# 3.12, not the 3.11 the package supports at runtime. mypy applies
+# python_version when parsing *every* file including third-party stubs, and
+# numpy 2.5's stubs use `type` statement syntax that only 3.12 accepts — so
+# python_version = "3.11" made mypy fail on numpy before reaching this project
+# at all, which is why it had never been run. Runtime support for 3.11 is
+# covered by the pytest matrix, and ruff's target-version keeps the syntax in
+# range.
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
+
+# The Tkinter tabs bind callbacks as bare lambdas, which mypy cannot infer a
+# type for. Annotating several hundred of them would not make the GUI safer.
+[[tool.mypy.overrides]]
+module = "hijaiyyah.gui.*"
+disable_error_code = ["misc"]

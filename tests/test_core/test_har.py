@@ -1,8 +1,8 @@
 """Tests for HAR registry — Bab III §3.27."""
 
-import json
 import os
 import tempfile
+
 from hijaiyyah.core.har import HARRegistry
 
 
@@ -59,8 +59,9 @@ class TestHARRegistry:
             assert os.path.exists(os.path.join(har_dir, "HAR-001", "master_table.json"))
             assert os.path.exists(os.path.join(har_dir, "HAR-001", "master_table.rom"))
             assert os.path.exists(os.path.join(har_dir, "HAR-001", "certificate.json"))
-            assert os.path.exists(os.path.join(har_dir, "HAR-001", "validation", "guard_report.json"))
-            assert os.path.exists(os.path.join(har_dir, "HAR-001", "validation", "inject_report.json"))
+            validation = os.path.join(har_dir, "HAR-001", "validation")
+            assert os.path.exists(os.path.join(validation, "guard_report.json"))
+            assert os.path.exists(os.path.join(validation, "inject_report.json"))
 
             # Verify ROM size
             rom_path = os.path.join(har_dir, "HAR-001", "master_table.rom")

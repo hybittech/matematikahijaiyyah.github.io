@@ -1,11 +1,10 @@
 """Tests for HCC — HC Compiler (facade)."""
 
-import pytest
 from hijaiyyah.compiler import (
-    HCCompiler,
-    CompileResult,
     CompileOptions,
+    CompileResult,
     CompileStage,
+    HCCompiler,
     compile_hc,
 )
 
